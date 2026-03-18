@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>제이방 가챠 뽑기</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+</head>
+<body>
+    <div id="game-container">
+        <div id="machine-wrap">
+            <img src="machine_body.png" id="machine-body">
+            <img src="machine_lever.png" id="machine-lever" onclick="rotateLever()">
+            <div id="status-message">내용 입력 시 '항목*개수'를 활용해보세요!</div>
+        </div>
+
+        <div id="result-display">
+            <div id="capsule-wrap" onclick="openCapsule()">
+                <img src="capsule_closed.png" id="display-capsule">
+                <div id="capsule-content"></div>
+            </div>
+            <div id="button-group">
+                <button onclick="resetGame()" class="btn-retry">한 번 더 뽑기</button>
+                <button onclick="startNewGame()" class="btn-new">새 게임</button>
+            </div>
+        </div>
+
+        <div id="setup-area">
+            <textarea id="penalty-input" placeholder="예: 배민*10, 꽝*5, 당첨*1"></textarea>
+            <div class="setup-buttons">
+                <button onclick="updatePenalties()" class="btn-save">내용 저장 & 생성</button>
+                <button onclick="shufflePenalties()" class="btn-shuffle">캡슐 섞기</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

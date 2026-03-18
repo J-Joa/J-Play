@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>제이방 징검다리 건너기</title>
+    <style>
+        body { margin: 0; background: #000; overflow: hidden; font-family: 'Pretendard', sans-serif; color: #fff; }
+        
+        /* [배경] 고공 건물 내부 구도 */
+        #game-view { 
+            width: 100vw; height: 100vh; overflow-y: auto; overflow-x: hidden; position: relative; scroll-behavior: smooth;
+            background-image: url('image_12.png'); 
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }
+
+        #bg-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: -1;
+        }
+
+        #game-container { 
+            width: 100%; position: relative; display: flex; flex-direction: column-reverse; align-items: center; 
+            padding: 400px 0 300px 0; min-height: 100vh;
+        }
+
+        /* [UI] 설정 메뉴 및 버튼 레이아웃 */
+        #setup-menu { 
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; 
+            background: rgba(0,0,0,0.9); padding: 50px; border-radius: 20px; text-align: center; border: 2px solid #00f0ff; 
+        }
+
+        #menu-buttons { 
+            display: flex; flex-wrap: wrap; justify-content: center; 
+            gap: 15px; max-width: 550px; margin: 0 auto; 
+        }
+
+        .btn { 
+            background: transparent; color: #00f0ff; border: 2px solid #00f0ff; 
+            width: 160px; padding: 15px 0; cursor: pointer; border-radius: 8px; 
+            font-size: 22px; font-weight: bold; transition: 0.3s; 
+        }
+        .btn:hover { background: #00f0ff; color: #000; }
+
+        /* 상태창 */
+        #status-bar { 
+            position: fixed; top: 30px; left: 50%; transform: translateX(-50%); 
+            font-size: 32px; font-weight: bold; z-index: 500; pointer-events: none; 
+            background: rgba(0,0,0,0.6); padding: 10px 30px; border-radius: 50px; 
+        }
+
+        /* 징검다리 */
+        .bridge-row { display: flex; gap: 110px; margin-bottom: 90px; }
+        .glass { width: 220px; height: 130px; cursor: pointer; position: relative; }
+        .glass img { width: 100%; height: 100%; object-fit: contain; }
+        .glass.broken img { visibility: hidden; }
+
+        /* 플레이어 */
+        #player { 
+            width: 120px; height: 180px; position: absolute; z-index: 100; 
+            pointer-events: none; display: none; transform: translate(-50%, -90%);
+        }
+        #player img { width: 100%; height: 100%; object-fit: contain; }
+
+        /* 실패 효과 */
+        .fall-effect { position: absolute; width: 450px; height: 450px; transform: translate(-50%, -50%); display: none; z-index: 200; pointer-events: none; }
+
+        /* 점프 애니메이션 */
+        .jumping { animation: jumpAni 0.6s ease-in-out forwards; }
+        @keyframes jumpAni {
+            0% { top: var(--s-t); left: var(--s-l); }
+            40% { top: calc(var(--s-t) - 200px); left: calc((var(--s-l) + var(--e-l)) / 2); transform: translate(-50%, -90%) scale(1.3); }
+            100% { top: var(--e-t); left: var(--e-l); }
+        }
+    </style>
+</head>
+<body>
+
+<audio id="snd-jump" src="jump.mp3" preload="auto"></audio>
+<audio id="snd-break" src="break.mp3" preload="auto"></audio>
+<audio id="snd-success" src="success.mp3" preload="auto"></audio>
+
+<div id="game-view">
+    <div id="bg-overlay"></div>
+
+    <div id="setup-menu">
+        <h1 style="color:#00f0ff; margin-bottom:30px;">징검다리</h1>
+        <div id="menu-buttons">
+            <button class="btn" onclick="startGame(1)">1인 모드</button>
+            <button class="btn" onclick="startGame(2)">2인 모드</button>
+            <button class="btn" onclick="startGame(3)">3인 모드</button>
+            <button class="btn" onclick="startGame(4)">4인 모드</button>
+            <button class="btn" onclick="startGame(5)">5인 모드</button>
+            <button class="btn" onclick="startGame(6)">6인 모드</button>
+        </div>
+        <button id="retry-btn" class="btn" style="display:none; border-color:#ff4444; color:#ff4444; width:340px; margin-top:20px;" onclick="location.reload()">다시 하기 (새 게임)</button>
+    </div>
+
+    <div id="status-bar">인원을 선택하세요</div>
+    
+    <div id="game-container">
+        <div id="bridge-root" style="display:flex; flex-direction:column-reverse; align-items:center;"></div>
+        <div id="player"><img src="player_icon.png"></div>
+        <div id="fail-gif" class="fall-effect"><img src="fall_down.gif"></div>
+    </div>
+</div>
+
+<script>
+    let state = { stage: 0, bridge: [], locked: false, total: 0, pCount: 1, currentP: 1, lastPos: {l:0, t:0} };
+    const player = document.getElementById('player');
+    const bridgeRoot = document.getElementById('bridge-root');
+    const statusBar = document.getElementById('status-bar');
+    const failGif = document.getElementById('fail-gif');
+    const setupMenu = document.getElementById('setup-menu');
+    const gameContainer = document.getElementById('game-container');
+
+    function playSnd(id) {
+        const s = document.getElementById(id);
+        s.currentTime = 0;
+        s.play().catch(e => {});
+    }
+
+    function startGame(num) {
+        state.pCount = num;
+        state.total = 4 + (num - 1) * 3;
+        state.stage = 0;
+        state.currentP = 1;
+        state.locked = false;
+        
+        setupMenu.style.display = 'none';
+        initBridge();
+        
+        setTimeout(() => {
+            const firstRow = document.getElementById('row-1');
+            const sL = gameContainer.offsetWidth / 2;
+            const sT = firstRow.offsetTop + firstRow.offsetHeight + 100;
+            state.lastPos = {l: sL, t: sT};
+            spawn(sL, sT);
+        }, 150);
+    }
+
+    function initBridge() {
+        bridgeRoot.innerHTML = '';
+        state.bridge = Array.from({length: state.total}, () => {
+            const isL = Math.random() < 0.5;
+            return { left: isL ? 'R' : 'F', right: isL ? 'F' : 'R' };
+        });
+
+        for(let i=1; i<=state.total; i++) {
+            const row = document.createElement('div');
+            row.className = 'bridge-row'; row.id = `row-${i}`;
+            row.innerHTML = `
+                <div class="glass" id="g-${i}-left" onclick="jump(${i}, 'left')"><img src="glass_normal.png"></div>
+                <div class="glass" id="g-${i}-right" onclick="jump(${i}, 'right')"><img src="glass_normal.png"></div>
+            `;
+            bridgeRoot.appendChild(row);
+        }
+    }
+
+    function spawn(l, t) {
+        player.style.display = 'block';
+        player.style.opacity = '1';
+        player.style.left = l + 'px';
+        player.style.top = t + 'px';
+        player.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function jump(s, side) {
+        if (state.locked || s !== state.stage + 1) return;
+        state.locked = true;
+        playSnd('snd-jump');
+
+        const target = document.getElementById(`g-${s}-${side}`);
+        const eL = target.offsetLeft + (target.offsetWidth / 2);
+        const eT = target.offsetTop + (target.offsetHeight / 2);
+        
+        const sL = parseFloat(player.style.left);
+        const sT = parseFloat(player.style.top);
+
+        player.style.setProperty('--s-l', `${sL}px`);
+        player.style.setProperty('--s-t', `${sT}px`);
+        player.style.setProperty('--e-l', `${eL}px`);
+        player.style.setProperty('--e-t', `${eT}px`);
+
+        player.classList.add('jumping');
+
+        setTimeout(() => {
+            player.classList.remove('jumping');
+            player.style.left = eL + 'px';
+            player.style.top = eT + 'px';
+
+            if (state.bridge[s-1][side] === 'R') {
+                state.stage++;
+                state.lastPos = {l: eL, t: eT};
+                playSnd('snd-success');
+                statusBar.innerText = `${state.currentP}번 주자: ${state.stage}/${state.total}`;
+                state.locked = false;
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if(state.stage === state.total) finish("성공!");
+            } else {
+                fail(target, eL, eT);
+            }
+        }, 600);
+    }
+
+    function fail(target, l, t) {
+        player.style.opacity = '0';
+        target.classList.add('broken');
+        playSnd('snd-break');
+        failGif.style.left = l + 'px';
+        failGif.style.top = t + 'px';
+        failGif.style.display = 'block';
+        
+        setTimeout(() => {
+            failGif.style.display = 'none';
+            if (state.currentP < state.pCount) {
+                state.currentP++;
+                statusBar.innerText = `다음 주자 출발!`;
+                spawn(state.lastPos.l, state.lastPos.t);
+                state.locked = false;
+            } else {
+                finish("전원 탈락!");
+            }
+        }, 3600);
+    }
+
+    function finish(txt) {
+        statusBar.innerText = txt;
+        document.getElementById('menu-buttons').style.display = 'none';
+        document.getElementById('retry-btn').style.display = 'inline-block';
+        setupMenu.style.display = 'block';
+    }
+</script>
+</body>
+</html>

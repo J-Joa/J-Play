@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>제이방 광선 쏘기</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="info">
+    전체 칸 수: <span id="total"></span> |
+    발사 횟수: <span id="shots"></span>/<span id="max"></span>
+  </div>
+
+  <div id="game">
+    <!-- 처음에는 모두 ? 로 표시 -->
+    <div class="slot">?</div>
+    <div class="slot">?</div>
+    <div class="slot">?</div>
+    <div class="slot">?</div>
+    <div class="slot">?</div>
+    <div class="slot">?</div>
+    <div class="slot">?</div>
+    <div class="slot">?</div>
+    <div class="slot">?</div>
+    <div class="slot">?</div>
+  </div>
+
+  <button onclick="shoot()">첫 광선 쏘기</button>
+  <button onclick="shootExtra()">추가 광선</button>
+  <button onclick="showAllResults()">결과 확인</button>
+
+  <p id="result"></p>
+  <p id="allResults"></p>
+
+  <script src="script.js"></script>
+</body>
+</html>

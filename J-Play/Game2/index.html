@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+    <title>제이방 도어락 마스터</title>
+</head>
+<body>
+<div class="wrapper">
+    <h1>비밀번호를 찾아라!</h1>
+<div id="doorlock-container">
+    <div id="setup-screen">
+        <h3>난이도 설정</h3>
+        <div id="length-buttons"></div>
+        <button onclick="setDup(true)">중복 허용(O)</button>
+        <button onclick="setDup(false)">중복 불가(X)</button>
+        <p>상태: <span id="status-text">자리수 선택중...</span></p>
+        <button onclick="startGame()">게임 시작!</button>
+    </div>
+
+    <div id="game-screen" style="display: none;">
+        <div id="display">****</div>
+        <div id="hint-area">
+            <p>총합: <span id="sum-hint">?</span></p>
+            <p>결과: <span id="feedback">입력 대기중</span></p>
+        </div>
+        
+        <button class="key" id="btn-1" onclick="inputNumber(1)"></button>
+        <button class="key" id="btn-2" onclick="inputNumber(2)"></button>
+        <button class="key" id="btn-3" onclick="inputNumber(3)"></button>
+        <button class="key" id="btn-4" onclick="inputNumber(4)"></button>
+        <button class="key" id="btn-5" onclick="inputNumber(5)"></button>
+        <button class="key" id="btn-6" onclick="inputNumber(6)"></button>
+        <button class="key" id="btn-7" onclick="inputNumber(7)"></button>
+        <button class="key" id="btn-8" onclick="inputNumber(8)"></button>
+        <button class="key" id="btn-9" onclick="inputNumber(9)"></button>
+        <button class="key" id="btn-star" onclick="BackSpace()"></button>
+        <button class="key" id="btn-0" onclick="inputNumber(0)"></button>
+        <button class="key" id="btn-hash" onclick="checkPassword()"></button>
+    </div>
+</div>
+<div id="game-message" style="position: absolute; top: 200px; width: 100%; text-align: center; font-size: 24px; font-weight: bold; color: yellow;"></div>
+
+<style>
+    .wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* 가로 중앙 정렬 */
+        justify-content: center;
+        min-height: 100vh;
+    }
+</style>
+
+<script src="script.js"></script>
+</body>
+</html>

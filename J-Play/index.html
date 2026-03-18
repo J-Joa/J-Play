@@ -1,0 +1,66 @@
+<style>
+    /* 썸네일을 담는 상자들 */
+    .game-list {
+        display: flex;
+        flex-wrap: wrap; /* 게임이 많아지면 다음 줄로 넘어감 */
+        gap: 30px;
+        justify-content: center;
+        padding: 50px;
+    }
+
+    /* 각 게임 항목 (카드 디자인) */
+    .game-card {
+        width: 250px; /* 여기서 썸네일 크기를 고정하세요 */
+        text-align: center;
+        border: 1px solid #444;
+        padding: 10px;
+        border-radius: 10px;
+        transition: transform 0.2s;
+    }
+    .game-card:hover { transform: scale(1.05); }
+
+    /* 이미지 크기 고정 */
+    .game-card img {
+        width: 100%;       /* 상자 폭에 꽉 차게 */
+        height: 150px;     /* 높이를 고정해야 텍스트가 정렬됨 */
+        object-fit: cover; /* 이미지가 찌그러지지 않고 꽉 채워짐 */
+        border-radius: 5px;
+    }
+
+    /* 텍스트 스타일 */
+    .game-card p { margin-top: 10px; font-weight: bold; }
+</style>
+
+<body>
+    <h1>제이 놀이터</h1>
+    <div class="game-list">
+        <a href="game0/index.html" class="game-card">
+            <img src="Game0/thumbnail.jpg" alt="광선쏘기">
+            <p>광선쏘기</p>
+        </a>
+        <a href="game1/index.html" class="game-card">
+            <img src="Game1/thumbnail.jpg" alt="러시안 룰렛">
+            <p>러시안 룰렛</p>
+        </a>
+        <a href="game2/index.html" class="game-card">
+            <img src="Game2/thumbnail.jpg" alt="도어락 마스터">
+            <p>도어락 마스터</p>
+        </a>
+        <a href="game3/index.html" class="game-card">
+            <img src="Game3/thumbnail.jpg" alt="폭탄 전선끊기">
+            <p>폭탄 전선끊기</p>
+        </a>
+        <a href="game4/index.html" class="game-card">
+            <img src="Game4/thumbnail.jpg" alt="폭탄 돌리기">
+            <p>폭탄 돌리기</p>
+        </a>
+        <a href="game5/index.html" class="game-card">
+            <img src="Game5/thumbnail.jpg" alt="가챠뽑기">
+            <p>가챠 뽑기</p>
+        </a>
+        <a href="game6/index.html" class="game-card">
+            <img src="Game6/thumbnail.jpg" alt="징검다리">
+            <p>징검다리</p>
+        </a>
+        </div>
+</body>

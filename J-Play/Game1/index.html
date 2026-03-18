@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>제이방 전용 러시안 룰렛</title>
+    <style>
+        body { background-color: #222; color: white; text-align: center; font-family: sans-serif; }
+        
+        /* 메인 리볼버 디스플레이 */
+        .revolver-display { position: relative; width: 500px; height: 300px; margin: 20px auto; }
+        .gun-body { position: absolute; top: 0; left: 0; width: 100%; z-index: 1; }
+        .side-cylinder { position: absolute; top: -62px; left: 55px; width: 503px; z-index: 2; /* 위치는 이미지에 맞게 미세조정 필요 */ }
+
+/* 🔥 CSS로 만든 불꽃 효과 */
+        #muzzle-flash {
+            position: absolute;
+            top: 85px;  /* 총구 높이 */
+            left: -30px; /* 총구 앞 위치 */
+            width: 0; height: 0;
+            background: radial-gradient(circle, #fff 10%, #ff0 40%, #f00 70%, transparent 100%);
+            clip-path: polygon(50% 0%, 100% 30%, 80% 80%, 50% 100%, 20% 80%, 0% 30%);
+            opacity: 0;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* 발사 애니메이션 */
+        @keyframes fire-ani {
+            0% { opacity: 1; width: 150px; height: 150px; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; width: 200px; height: 200px; transform: translate(-50%, -50%) scale(1.5); }
+        }
+        .do-fire { animation: fire-ani 0.15s ease-out forwards; }
+
+        /* 클릭하는 게임판 (정면 탄창) */
+        .game-board { position: relative; width: 300px; height: 300px; top: -60px; margin: 0 auto; border: 2px solid #555; border-radius: 50%; overflow: hidden; cursor: pointer; }
+        .front-cylinder-img { position: relative; width: 173%; height: 123%; top: -28px; margin: 0 auto; object-fit: cover; }
+        
+        /* 약실 버튼 스타일 */
+        .chamber-btn { position: absolute; width: 60px; height: 60px; background: rgba(255,255,255,0.1); border: 2px solid white; border-radius: 50%; color: white; font-size: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; transition: background 0.2s; }
+        .chamber-btn:hover { background: rgba(255,255,255,0.3); }
+        .chamber-btn:disabled { background: rgba(0,0,0,0.5); border-color: #555; color: #555; cursor: default; }
+
+        /* 약실 버튼 위치 (front_cylinder.jpg 이미지의 구멍 위치에 맞게 배치) */
+        #btn-1 { top: 10%; left: 60%; transform: translateX(-50%); }
+        #btn-2 { top: 36%; right: 10%; }
+        #btn-3 { bottom: 15%; right: 21%; }
+        #btn-4 { bottom: 11%; left: 38%; transform: translateX(-50%); }
+        #btn-5 { bottom: 36%; left: 9%; }
+        #btn-6 { top: 15%; left: 19%; }
+
+        #status { font-size: 22px; font-weight: bold; margin-top: 10px; min-height: 30px; }
+        .btn-reset { margin-top: 20px; padding: 10px 25px; cursor: pointer; }
+
+    </style>
+</head>
+<body>
+
+<h2>🔫 러시안 룰렛</h2>
+
+    <div class="game-container">
+        <div class="revolver-display" id="revolver-ui">
+        <img src="gun_body.png" alt="리볼버 몸체" class="gun-body">
+        <img src="side_cylinder.png" alt="측면 탄창" class="side-cylinder" id="side-cilynder-img">
+        <div id="muzzle-flash"></div>
+        </div>
+
+<div class="game-board">
+        <img src="front_cylinder.jpg" alt="정면 탄창 게임판" class="front-cylinder-img">
+        
+        <button class="chamber-btn" id="btn-1" onclick="clickChamber(1)">1</button>
+        <button class="chamber-btn" id="btn-2" onclick="clickChamber(2)">2</button>
+        <button class="chamber-btn" id="btn-3" onclick="clickChamber(3)">3</button>
+        <button class="chamber-btn" id="btn-4" onclick="clickChamber(4)">4</button>
+        <button class="chamber-btn" id="btn-5" onclick="clickChamber(5)">5</button>
+        <button class="chamber-btn" id="btn-6" onclick="clickChamber(6)">6</button>
+    </div>
+</div>
+
+    <p id="status">번호를 선택하세요!</p>
+    <button class="btn-reset" onclick="initGame()">게임 리셋 / 재장전</button>
+
+<script>
+    let bullet;
+    let gameOver = false;
+    const sndClick = new Audio('Dryfire.mp3'); 
+    const sndBang = new Audio('gunshot.mp3');
+
+    function initGame() {
+        bullet = Math.floor(Math.random() * 6) + 1;
+        gameOver = false;
+        document.getElementById('status').innerText = "재장전 완료! 번호를 고르세요.";
+        document.getElementById('side-cilynder-img').style.opacity = "1";
+        
+        const btns = document.querySelectorAll('.chamber-btn');
+        btns.forEach(b => {
+            b.disabled = false;
+            b.style.backgroundColor = "rgba(255,255,255,0.1)";
+        });
+    }
+
+    // 함수 이름을 clickChamber로 변경했습니다
+    function clickChamber(n) {
+        if(gameOver) return;
+        
+        // id를 btn-n 형태로 찾도록 수정
+        const btn = document.getElementById('btn-' + n);
+        const flash = document.getElementById('muzzle-flash');
+        const revUI = document.getElementById('revolver-ui');
+
+        if(n === bullet) {
+            gameOver = true;
+            sndBang.play();
+            document.getElementById('status').innerText = "💥 탕!!! 꽝입니다!";
+            document.getElementById('status').style.color = "red";
+            btn.style.backgroundColor = "red";
+            document.getElementById('side-cilynder-img').style.opacity = "0.2";
+
+            flash.classList.add('do-fire');
+            revUI.style.transform = "translateX(30px) rotate(-5deg)";
+
+            setTimeout(() => {
+                flash.classList.remove('do-fire');
+                revUI.style.transform = "translateX(0) rotate(0)";
+            }, 200);
+        } else {
+            sndClick.play();
+            document.getElementById('status').innerText = "클릭... 살았습니다.";
+            btn.disabled = true;
+            btn.style.backgroundColor = "rgba(0,0,0,0.5)";
+        }
+    }
+
+    initGame();
+</script>
+</body>
+</html>

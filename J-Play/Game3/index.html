@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>제이방 폭탄 전선 끊기</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <div id="mode-selection">
+            <button class="start-btn" onclick="initGame(4)">4다리</button>
+            <button class="start-btn" onclick="initGame(5)">5다리</button>
+        </div>
+
+        <div id="game-screen" style="display: none;">
+            <div id="top-bar">
+                <div id="timer-display">00:<span id="timer">30.00</span></div>
+                <div id="controls">
+                    <button onclick="togglePause()" id="pause-btn">일시정지</button>
+                    <button onclick="resetGame()">초기화</button>
+                </div>
+            </div>
+
+            <div id="bomb-board">
+                <img id="result-popup" src="" alt="결과">
+                <div id="message-overlay"></div>
+                <img src="chip.png" id="main-chip">
+                <svg id="signal-svg"></svg>
+            </div>
+
+            <div id="button-panel">
+                </div>
+            <p id="guide-text">전선을 선택해 자르세요!</p>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+h1 {
+    text-align: center;
+    color: white;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    font-family: 'Arial', sans-serif; /* 폰트 깔끔하게 */
+}
+
+#setup-screen {
+    position: absolute;
+    top: 50px; /* 도어락 이미지의 적절한 위치로 조정 */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10; /* 이게 핵심! 다른 요소보다 위에 띄움 */
+    background: rgba(0, 0, 0, 0.8); /* 눈 아프지 않게 어두운 반투명 배경 */
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+body {
+    background-color: #2c3e50; /* 어두운 남색 계열 */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* 화면 전체 높이 사용 */
+}
+
+#doorlock-container {
+    position: relative;
+    width: 300px; height: 600px;
+    background: url('DoorLock.png') no-repeat center/contain;
+    margin: 50px auto;
+}
+
+#display {
+    position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+    color: #00ff00; font-size: 40px; font-family: monospace;
+}
+
+#hint-area {
+    position: absolute;
+    top: 400px;      /* 이미지상 카드 위치에 맞게 조절하세요 */
+    left: 50%;
+    transform: translateX(-50%);
+    color: #f1c40f;  /* 눈에 잘 띄는 노란색 */
+    text-align: center;
+    width: 200px;
+}
+
+.key {
+    position: absolute; width: 50px; height: 50px;
+    background: rgba(255, 255, 255, 0.05); border: none; cursor: pointer;
+}
+
+#btn-1 { top: 70px; left: 70px; }
+#btn-2 { top: 70px; left: 124px; }
+#btn-3 { top: 70px; left: 178px; }
+#btn-4 { top: 131px; left: 70px; }
+#btn-5 { top: 131px; left: 124px; }
+#btn-6 { top: 131px; left: 178px; }
+#btn-7 { top: 193px; left: 70px; }
+#btn-8 { top: 193px; left: 124px; }
+#btn-9 { top: 193px; left: 178px; }
+#btn-star { top: 255px; left: 70px; }
+#btn-0 { top: 255px; left: 124px; }
+#btn-hash { top: 255px; left: 178px; }
