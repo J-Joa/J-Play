@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>제이방 크랙더월</title>
+    <style>
+        :root { --bg: #121212; --card: #1e1e1e; --accent: #ff4757; }
+        body { background: var(--bg); color: white; font-family: 'Malgun Gothic', sans-serif; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; }
+        #setup-area { background: var(--card); padding: 25px; border-radius: 12px; width: 420px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #333; }
+        .input-item { margin-bottom: 15px; }
+        .input-item label { display: block; font-size: 0.9rem; margin-bottom: 5px; color: #aaa; }
+        input, select { width: 100%; padding: 10px; box-sizing: border-box; border-radius: 6px; border: 1px solid #333; background: #252525; color: white; outline: none; }
+        input:focus { border-color: var(--accent); }
+        .btn-start { width: 100%; padding: 15px; background: var(--accent); border: none; color: white; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 1.1rem; transition: 0.2s; }
+        .btn-start:hover { background: #ff6b81; }
+
+        #status-bar { margin: 20px 0; font-size: 1.5rem; font-weight: bold; display: none; gap: 40px; color: #ffd700; }
+        #game-container { position: relative; border: 5px solid #444; display: none; background-size: cover; background-position: center; background-repeat: no-repeat; }
+        #answer-display { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; font-weight: bold; z-index: 1; pointer-events: none; color: white; text-shadow: 2px 2px 10px rgba(0,0,0,1); text-align: center; white-space: pre-wrap; padding: 20px; box-sizing: border-box; }
+        
+        .brick { background: #333; border: 1px solid #111; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; color: #666; font-size: 1rem; transition: 0.1s; user-select: none; }
+        .brick:hover { background: #444; color: white; }
+        .brick.removed { opacity: 0; pointer-events: none; transition: 0.2s; }
+        .item-pop { position: absolute; width: 70%; height: 70%; z-index: 3; pointer-events: none; animation: pop 0.6s forwards; }
+
+        @keyframes pop { 0% { transform: scale(0); opacity: 0; } 50% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
+        .controls { margin-top: 20px; display: none; gap: 15px; }
+        button.sub { padding: 12px 25px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 1rem; }
+    </style>
+</head>
+<body>
+
+<div id="setup-area">
+    <h2 style="margin-top:0; text-align:center; color:var(--accent);">🧱 크랙더월 </h2>
+    <div class="input-item">
+        <label>게임 모드</label>
+        <select id="mode-select">
+            <option value="quiz">정답 맞추기 (8x8)</option>
+            <option value="break">벽 무너뜨리기 (10x10)</option>
+        </select>
+    </div>
+    <div class="input-item"><label>이미지 주소 (URL)</label><input type="text" id="inp-img" placeholder="https://..."></div>
+    <div class="input-item"><label>정답 텍스트</label><input type="text" id="inp-text" placeholder="벽 뒤에 나타날 문구"></div>
+    <div class="input-item"><label>참가자 명단 (쉼표 구분)</label><input type="text" id="inp-players" placeholder="제이, 참가자1, 참가자2"></div>
+    <button class="btn-start" onclick="initGame()">게임 시작</button>
+</div>
+
+<div id="status-bar">
+    <div id="info-turn">👤 차례: -</div>
+    <div id="info-stat">🔢 누적 클릭: 0</div>
+</div>
+
+<div id="game-container"><div id="answer-display"></div></div>
+
+<div class="controls" id="control-area">
+    <button class="sub" style="background:#27ae60; color:white;" onclick="finishGame()">정답 공개</button>
+    <button class="sub" style="background:#555; color:white;" onclick="location.reload()">초기화</button>
+</div>
+
+<audio id="aud-click" src="Sounds/click.mp3"></audio>
+<audio id="aud-break" src="Sounds/break.mp3"></audio>
+<audio id="aud-item" src="Sounds/item.mp3"></audio>
+<audio id="aud-success" src="Sounds/success.mp3"></audio>
+
+<script>
+    let mode, size, players = [], pIdx = 0, count = 0, grid = [];
+    const itemTypes = ['item_8', 'item_cross', 'item_row', 'item_col', 'item_again'];
+
+    function initGame() {
+        try {
+            mode = document.getElementById('mode-select').value;
+            size = (mode === 'quiz') ? 8 : 10;
+            const img = document.getElementById('inp-img').value;
+            const txt = document.getElementById('inp-text').value;
+            const pInput = document.getElementById('inp-players').value;
+            
+            players = pInput ? pInput.split(',').map(p => p.trim()) : ["플레이어"];
+
+            // UI 전환
+            document.getElementById('setup-area').style.display = 'none';
+            document.getElementById('status-bar').style.display = 'flex';
+            document.getElementById('game-container').style.display = 'grid';
+            document.getElementById('control-area').style.display = 'flex';
+
+            const cont = document.getElementById('game-container');
+            const contSize = 640; // 고정 사이즈로 안정성 확보
+            cont.style.width = contSize + 'px'; 
+            cont.style.height = contSize + 'px';
+            cont.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+            
+            if(img) cont.style.backgroundImage = `url('${img}')`;
+            else cont.style.backgroundImage = "url('bg_default.jpg')";
+            
+            document.getElementById('answer-display').innerText = txt || "성공!";
+            
+            buildGrid();
+            updateUI();
+        } catch (e) {
+            alert("게임 초기화 중 오류 발생: " + e.message);
+        }
+    }
+
+    function buildGrid() {
+        const cont = document.getElementById('game-container');
+        cont.innerHTML = '<div id="answer-display">' + document.getElementById('answer-display').innerText + '</div>';
+        grid = [];
+        
+        const total = size * size;
+        const qty = (mode === 'quiz') ? 1 : 2;
+        let map = new Array(total).fill(null);
+
+        itemTypes.forEach(t => {
+            for(let i=0; i<qty; i++){
+                let r; 
+                let limit = 0;
+                do { r = Math.floor(Math.random()*total); limit++; } 
+                while(map[r] && limit < 500);
+                map[r] = t;
+            }
+        });
+
+        for(let i=0; i<total; i++) {
+            const b = document.createElement('div');
+            b.className = 'brick';
+            b.innerText = i + 1;
+            b.onclick = () => hit(i);
+            cont.appendChild(b);
+            grid.push({ el: b, item: map[i] });
+        }
+    }
+
+    function hit(i, isChain = false) {
+        const target = grid[i];
+        if(!target || target.el.classList.contains('removed')) return;
+
+        if(!isChain) {
+            play('aud-click');
+            count++;
+        }
+
+        target.el.classList.add('removed');
+        
+        if(target.item) {
+            play('aud-item');
+            popItem(target.el, target.item);
+            useItem(i, target.item);
+        }
+
+        if(!isChain && target.item !== 'item_again') {
+            pIdx = (pIdx + 1) % players.length;
+        }
+        updateUI();
+    }
+
+    function useItem(idx, type) {
+        setTimeout(() => play('aud-break'), 50);
+        const r = Math.floor(idx / size), c = idx % size;
+        if(type === 'item_8') {
+            for(let y=r-1; y<=r+1; y++) for(let x=c-1; x<=c+1; x++) 
+                if(y>=0 && y<size && x>=0 && x<size) hit(y*size+x, true);
+        } else if(type === 'item_cross') {
+            [[r-1,c],[r+1,c],[r,c-1],[r,c+1]].forEach(p => {
+                if(p[0]>=0 && p[0]<size && p[1]>=0 && p[1]<size) hit(p[0]*size+p[1], true);
+            });
+        } else if(type === 'item_row') {
+            for(let x=0; x<size; x++) hit(r*size+x, true);
+        } else if(type === 'item_col') {
+            for(let y=0; y<size; y++) hit(y*size+c, true);
+        }
+    }
+
+    function popItem(parent, type) {
+        const img = document.createElement('img');
+        img.src = type + '.png';
+        img.className = 'item-pop';
+        parent.appendChild(img);
+    }
+
+    function updateUI() {
+        document.getElementById('info-turn').innerText = `👤 차례: ${players[pIdx]}`;
+        document.getElementById('info-stat').innerText = `🔢 누적 클릭: ${count}`;
+    }
+
+    function finishGame() {
+        play('aud-success');
+        grid.forEach(obj => obj.el.classList.add('removed'));
+    }
+
+    function play(id) {
+        const a = document.getElementById(id);
+        if(a) {
+            a.currentTime = 0;
+            // 오디오 파일이 없어도 게임이 멈추지 않게 예외 처리
+            a.play().catch(e => console.warn("사운드 재생 건너뜀 (파일 확인 필요):", id));
+        }
+    }
+</script>
+</body>
+</html>
