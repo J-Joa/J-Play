@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>제이방 Plinko</title>
+    <style>
+        :root { --bg: #050505; --pin: #ffffff; --gold: #ffd700; --accent: #ff4757; }
+        body { background: var(--bg); color: white; font-family: 'Pretendard', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        #setup-area { position: fixed; background: #1a1a1a; padding: 25px; border-radius: 15px; border: 2px solid var(--gold); width: 450px; z-index: 2000; text-align: center; }
+        textarea { width: 100%; height: 120px; background: #000; color: #0f0; border: 1px solid #333; padding: 10px; margin-bottom: 10px; resize: none; border-radius: 6px; outline: none; }
+        .setup-btn { width: 48%; padding: 12px; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; margin: 5px 1%; transition: 0.2s; }
+        #game-container { display: none; position: relative; width: 800px; height: 950px; background: #000; border: 8px solid #222; border-radius: 20px; overflow: hidden; }
+        #drop-selector { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 100; }
+        .drop-btn { width: 52px; height: 52px; border-radius: 50%; border: 3px solid var(--gold); background: #1a1a1a; color: var(--gold); font-weight: bold; cursor: pointer; font-size: 1.3rem; }
+        #result-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8); width: 550px; height: 320px; background: white; border-radius: 25px; border: 10px solid var(--gold); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; color: black; transition: 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); cursor: pointer; }
+        #result-popup.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    </style>
+</head>
+<body>
+
+<div id="setup-area">
+    <h2 style="color:var(--gold);">제이놀이터 PLINKO</h2>
+    <textarea id="inp-list">꽝, 치킨세트, 역팬, 배민, 꽝, 상품권, 꽝</textarea>
+    <button class="setup-btn" style="background:#444; color:white;" onclick="shuffleInput()">🔀 위치 섞기</button>
+    <button class="setup-btn" style="background:var(--gold); color:black;" onclick="initGame()">🚀 가동 (초기 카오스 활성)</button>
+</div>
+
+<div id="game-container">
+    <div id="drop-selector">
+        <script>
+            for(let i=1; i<=7; i++) document.write(`<button class="drop-btn" onclick="dropFrom(${i})">${i}</button>`);
+        </script>
+    </div>
+    <canvas id="plinkoCanvas" width="800" height="950"></canvas>
+</div>
+
+<div id="result-popup" onclick="location.reload()">
+    <h1 id="winner-name" style="font-size:70px; font-weight:900;">결과</h1>
+    <p>(클릭하여 리셋)</p>
+</div>
+
+<script>
+    const canvas = document.getElementById('plinkoCanvas');
+    const ctx = canvas.getContext('2d');
+    let pins = [], slots = [], ball = null, animationId, isRevealed = false;
+    
+    // 💡 물리 상수: 자유 낙하 에너지를 살리기 위해 gravity를 미세하게 높임
+    const gravity = 0.72, pinBounce = 0.62, wallBounce = 0.88;
+
+    window.onload = () => {
+        const saved = localStorage.getItem('jplay_plinko_v67');
+        if(saved) document.getElementById('inp-list').value = saved;
+    };
+
+    function shuffleInput() {
+        const el = document.getElementById('inp-list');
+        let arr = el.value.split(',').map(s => s.trim()).filter(s => s !== "");
+        for(let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        el.value = arr.join(', ');
+    }
+
+    function initGame() {
+        slots = document.getElementById('inp-list').value.split(/[,\n]/).map(s => s.trim()).filter(s => s !== "");
+        document.getElementById('setup-area').style.display = 'none';
+        document.getElementById('game-container').style.display = 'block';
+        createGrid();
+        animate();
+    }
+
+    function createGrid() {
+        pins = [];
+        const rows = 21, cols = 17, spacingX = canvas.width / cols, spacingY = 41;
+        const topOfPockets = canvas.height - 110;
+        const openTopLimit = 120 + (5 * spacingY); // 💡 상단 5줄(약 1/4)은 바늘 없음
+
+        for (let i = 0; i < rows; i++) {
+            const py = 120 + i * spacingY;
+            if (py < topOfPockets - 20 && py > openTopLimit) { // 💡 상단 구역 제외
+                for (let j = 0; j <= cols; j++) {
+                    pins.push({ x: j * spacingX + (i % 2 === 0 ? spacingX / 2 : 0), y: py });
+                }
+            }
+        }
+    }
+
+    function dropFrom(num) {
+        if(ball) return;
+        isRevealed = true;
+        ball = { 
+            x: (num - 0.5) * (canvas.width / 7), 
+            y: 70, 
+            vx: (Math.random() - 0.5) * 4, // 초기 vx 부여
+            vy: 0, 
+            r: 12, 
+            color: `hsl(${Math.random() * 360}, 75%, 60%)`, isSettled: false 
+        };
+        document.querySelectorAll('.drop-btn').forEach(b => b.disabled = true);
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#fff"; pins.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2); ctx.fill(); });
+
+        const slotWidth = canvas.width / slots.length;
+        const topOfPockets = canvas.height - 110;
+        const bottomLine = canvas.height - 25;
+
+        slots.forEach((s, i) => {
+            const x = i * slotWidth;
+            if (i > 0) { ctx.fillStyle = "#444"; ctx.fillRect(x - 4, topOfPockets, 8, 110); }
+            ctx.textAlign = "center"; ctx.font = "bold 16px sans-serif";
+            ctx.fillStyle = isRevealed ? "var(--gold)" : "#555";
+            ctx.fillText(isRevealed ? s : "?", x + slotWidth/2, canvas.height - 45);
+        });
+
+        if (ball && !ball.isSettled) {
+            // 물리 정밀도 (Sub-stepping)
+            for(let step = 0; step < 2; step++) {
+                ball.vy += gravity / 2; ball.x += ball.vx / 2; ball.y += ball.vy / 2;
+
+                if (ball.x < ball.r + 10) { ball.x = ball.r + 10; ball.vx *= -wallBounce; }
+                if (ball.x > canvas.width - ball.r - 10) { ball.x = canvas.width - ball.r - 10; ball.vx *= -wallBounce; }
+
+                pins.forEach(p => {
+                    const dx = ball.x - p.x, dy = ball.y - p.y;
+                    if (Math.sqrt(dx*dx + dy*dy) < ball.r + 5) {
+                        const angle = Math.atan2(dy, dx);
+                        const speed = Math.sqrt(ball.vx**2 + ball.vy**2) * pinBounce;
+                        // 💡 첫 충돌의 임팩트를 극대화하기 위해 랜덤 반발력 상향
+                        ball.vx = Math.cos(angle) * speed + (Math.random() - 0.5) * 15;
+                        ball.vy = Math.sin(angle) * speed;
+                        ball.x = p.x + Math.cos(angle) * (ball.r + 6);
+                        ball.y = p.y + Math.sin(angle) * (ball.r + 6);
+                    }
+                });
+
+                if (ball.y > topOfPockets) {
+                    const slotIdx = Math.floor(ball.x / slotWidth);
+                    const leftWallX = slotIdx * slotWidth;
+                    const rightWallX = (slotIdx + 1) * slotWidth;
+                    if (ball.x < leftWallX + ball.r + 4) { ball.x = leftWallX + ball.r + 4; ball.vx *= -0.7; }
+                    if (ball.x > rightWallX - ball.r - 4) { ball.x = rightWallX - ball.r - 4; ball.vx *= -0.7; }
+                }
+
+                // 바닥 안착
+                if (ball.y > bottomLine - ball.r) {
+                    ball.y = bottomLine - ball.r;
+                    ball.vy *= -0.3; ball.vx *= 0.8;
+                    if (Math.abs(ball.vy) < 1 && Math.abs(ball.vx) < 1) {
+                        ball.isSettled = true;
+                        const idx = Math.min(slots.length - 1, Math.floor(ball.x / slotWidth));
+                        document.getElementById('winner-name').innerText = slots[idx];
+                        const pop = document.getElementById('result-popup');
+                        pop.style.display = 'flex'; setTimeout(() => pop.classList.add('show'), 600);
+                        break;
+                    }
+                }
+            }
+            ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI*2);
+            ctx.fillStyle = ball.color; ctx.fill(); ctx.strokeStyle = "white"; ctx.lineWidth = 2; ctx.stroke();
+        }
+        requestAnimationFrame(animate);
+    }
+</script>
+</body>
+</html>

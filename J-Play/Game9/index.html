@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>제이방 슬롯 드랍</title>
+    <style>
+        :root { --bg: #0a0a0a; --gold: #ffd700; --accent: #ff4757; --panel: #1a1a1a; }
+        body { background: var(--bg); color: white; font-family: 'Malgun Gothic', sans-serif; display: flex; flex-direction: column; align-items: center; margin: 0; overflow: hidden; height: 100vh; justify-content: center; }
+
+        /* 설정창 */
+        #setup-area { background: var(--panel); padding: 25px; border-radius: 15px; border: 2px solid var(--gold); width: 500px; z-index: 2000; text-align: center; }
+        textarea { width: 100%; height: 180px; background: #000; color: #0f0; border: 1px solid #333; padding: 12px; box-sizing: border-box; resize: none; border-radius: 6px; margin-bottom: 10px; }
+        .hint { font-size: 0.8rem; color: #888; margin-bottom: 15px; line-height: 1.4; }
+        .btn-main { width: 100%; padding: 15px; background: linear-gradient(45deg, var(--gold), #b8860b); border: none; font-weight: bold; font-size: 1.3rem; cursor: pointer; border-radius: 8px; color: black; }
+
+        /* 슬롯 머신 디자인 */
+        #machine-wrap { display: none; flex-direction: column; align-items: center; width: 900px; height: 600px; background: #111; border: 12px solid #333; border-radius: 30px; position: relative; }
+        
+        /* 슬롯 윈도우 */
+        #slot-window { width: 750px; height: 160px; background: #000; margin-top: 100px; border: 6px solid var(--gold); border-radius: 15px; overflow: hidden; position: relative; box-shadow: inset 0 0 40px rgba(255,215,0,0.2); }
+        #slot-reel { position: absolute; width: 100%; display: flex; flex-direction: column; align-items: center; top: 0; }
+        .slot-item { height: 160px; line-height: 160px; font-size: 3rem; font-weight: 900; color: #fff; width: 100%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* 결과 팝업 (클릭 시 닫힘) */
+        #result-popup { 
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5); 
+            width: 750px; height: 350px; background: white; border-radius: 30px; border: 10px solid var(--gold); 
+            display: none; flex-direction: column; align-items: center; justify-content: center; 
+            z-index: 9999; box-shadow: 0 0 100px rgba(0,0,0,0.8); opacity: 0; transition: 0.3s; cursor: pointer;
+        }
+        #result-popup.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        #winner-name { font-size: 75px; color: black; font-weight: 900; margin: 15px 0; text-align: center; word-break: keep-all; width: 100%; padding: 0 20px; box-sizing: border-box; }
+
+        /* 제어 버튼 */
+        #action-btn { margin-top: 80px; padding: 20px 90px; font-size: 2rem; border-radius: 60px; border: none; background: var(--accent); color: white; cursor: pointer; font-weight: bold; box-shadow: 0 10px 30px rgba(255, 71, 87, 0.4); }
+        #action-btn:disabled { background: #444; box-shadow: none; cursor: default; }
+    </style>
+</head>
+<body>
+
+<div id="setup-area">
+    <h2 style="color:var(--gold); margin-bottom:10px;">제이방 슬롯 드랍</h2>
+    <div class="hint">
+        <b>입력 팁:</b> 쉼표(,)나 줄바꿈으로 구분 가능<br>
+        <b>수량 배수:</b> 아이템*숫자 (예: 꽝*100, 배민*3)
+    </div>
+    <textarea id="inp-list" placeholder="예: 꽝*50, 배민 1만원*3, 황금용팬티"></textarea>
+    <button class="btn-main" onclick="startMachine()">슬롯 가동 시작 (자동저장)</button>
+</div>
+
+<div id="machine-wrap">
+    <div id="slot-window">
+        <div id="slot-reel"></div>
+    </div>
+    <button id="action-btn" onclick="spinSlot()">슬롯 돌리기!</button>
+    <button style="margin-top:20px; background:none; border:none; color:#444; cursor:pointer;" onclick="location.reload()">리스트 수정</button>
+</div>
+
+<div id="result-popup" onclick="closeResult()">
+    <p style="color:#888; font-weight:bold; font-size:24px; margin:0;">🎯 슬롯 결과 🎯</p>
+    <h1 id="winner-name">아이템 이름</h1>
+    <div style="color:#bbb;">(클릭하면 창이 닫힙니다)</div>
+</div>
+
+<script>
+    let itemList = [], state = 'READY';
+    const reel = document.getElementById('slot-reel');
+
+    window.onload = () => {
+        const saved = localStorage.getItem('jplay_slot_v11');
+        if(saved) document.getElementById('inp-list').value = saved;
+    };
+
+    function startMachine() {
+        const rawTxt = document.getElementById('inp-list').value;
+        localStorage.setItem('jplay_slot_v11', rawTxt);
+
+        // 💡 콤마와 줄바꿈 통합 처리
+        let parts = rawTxt.split(/[,\n]/).map(s => s.trim()).filter(s => s !== "");
+        
+        itemList = [];
+        parts.forEach(p => {
+            if(p.includes('*')) {
+                let [name, count] = p.split('*');
+                let n = parseInt(count.trim());
+                if(!isNaN(n)) {
+                    for(let i=0; i<n; i++) itemList.push(name.trim());
+                } else { itemList.push(p); }
+            } else { itemList.push(p); }
+        });
+
+        if(itemList.length < 1) return alert("목록을 입력하세요!");
+
+        document.getElementById('setup-area').style.display = 'none';
+        document.getElementById('machine-wrap').style.display = 'flex';
+        
+        renderReel();
+    }
+
+    function renderReel() {
+        reel.innerHTML = '';
+        // 💡 슬롯 연출을 위해 리스트를 섞고 최소 300px 이상의 높이를 확보
+        let displayList = [...itemList];
+        // 리스트가 너무 적으면 반복해서 채움
+        while(displayList.length < 50) { displayList = [...displayList, ...itemList]; }
+        
+        // 시각적 재미를 위해 랜덤하게 섞음
+        displayList.sort(() => Math.random() - 0.5);
+
+        displayList.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'slot-item';
+            div.innerText = item;
+            reel.appendChild(div);
+        });
+        reel.style.top = "0px";
+    }
+
+    function spinSlot() {
+        if(state !== 'READY') return;
+        state = 'SPINNING';
+        const btn = document.getElementById('action-btn');
+        btn.disabled = true;
+
+        const itemHeight = 160;
+        const totalItems = reel.children.length;
+        const targetIndex = Math.floor(Math.random() * (totalItems - 10)) + 5; // 중앙 근처에서 멈추도록
+        const finalPosition = -(targetIndex * itemHeight);
+
+        // 💡 웅장한 감속 애니메이션 (4.5초)
+        reel.style.transition = "top 4.5s cubic-bezier(0.15, 0, 0.05, 1)";
+        reel.style.top = finalPosition + "px";
+
+        setTimeout(() => {
+            const winner = reel.children[targetIndex].innerText;
+            showResult(winner);
+        }, 4700);
+    }
+
+    function showResult(winner) {
+        document.getElementById('winner-name').innerText = winner;
+        const popup = document.getElementById('result-popup');
+        popup.style.display = 'flex';
+        setTimeout(() => popup.classList.add('show'), 50);
+        state = 'DONE';
+    }
+
+    function closeResult() {
+        const popup = document.getElementById('result-popup');
+        popup.classList.remove('show');
+        setTimeout(() => {
+            popup.style.display = 'none';
+            resetGame();
+        }, 300);
+    }
+
+    function resetGame() {
+        state = 'READY';
+        reel.style.transition = "none";
+        reel.style.top = "0px";
+        document.getElementById('action-btn').disabled = false;
+        // 다시 섞어서 새로운 릴 생성
+        renderReel();
+    }
+// 코드 하단 <script> 부분에 추가하면 좋은 로직
+window.addEventListener('keydown', (e) => {
+    // 스페이스바나 엔터를 누르면 슬롯 가동
+    if (e.code === 'Space' || e.code === 'Enter') {
+        if (state === 'READY') {
+            spinSlot();
+        } else if (state === 'DONE') {
+            closeResult();
+        }
+    }
+});
+</script>
+</body>
+</html>
