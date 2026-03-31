@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>3D Logo Studio - Full Package</title>
+    <style>
+        /* 모든 인기 무료 한글 폰트 로드 */
+        @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Dongle:wght@700&family=Gaegu:wght@700&family=Gamja+Flower&family=Gowun+Batang:wght@700&family=Gowun+Dodum&family=Hi+Melody&family=Jua&family=Kirang+Haerang&family=Nanum+Brush+Script&family=Nanum+Gothic:wght@800&family=Nanum+Pen+Script&family=Poor+Story&family=Single+Day&family=Song+Myung&family=Yeon+Sung&family=Sunflower:wght@700&family=Bagel+Fat+One&family=Hahmlet:wght@700&family=Black+And+White+Picture&display=swap');
+
+        body {
+            background-color: #ffffff;
+            color: #222;
+            margin: 0;
+            display: flex;
+            font-family: 'Gowun Dodum', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 380px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-right: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .section {
+            background: #fff;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        h3 {
+            margin: 0 0 10px 0;
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        .row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            padding: 6px;
+            background: #f9f9f9;
+            border-radius: 6px;
+        }
+
+        .row label { font-size: 10px; width: 45px; color: #888; }
+
+        input[type="color"] { width: 30px; height: 30px; border: none; cursor: pointer; background: none; }
+        input[type="range"] { flex: 1; accent-color: #333; }
+
+        .btn-add {
+            width: 100%;
+            padding: 8px;
+            background: #fff;
+            border: 1px dashed #aaa;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .btn-save {
+            width: 100%;
+            background: #000;
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #ffffff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #decoIcon {
+            position: absolute;
+            z-index: 1;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        #previewText {
+            font-size: 160px;
+            text-align: center;
+            line-height: 1;
+            user-select: none;
+            z-index: 2;
+            -webkit-text-stroke: 0px #000;
+        }
+
+        #exportCanvas { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="section">
+        <h3>🔤 텍스트 & 폰트 (무료 22종)</h3>
+        <input type="text" id="nickInput" value="FLEX" oninput="render()" style="margin-bottom:8px;">
+        <select id="fontSelect" onchange="render()">
+            <optgroup label="쫀득한 귀여움">
+                <option value="'Dongle', sans-serif">동글체</option>
+                <option value="'Bagel Fat One', cursive">베이글팻체</option>
+                <option value="'Jua', sans-serif">배민 주아체</option>
+                <option value="'Single Day', cursive">싱글데이</option>
+            </optgroup>
+            <optgroup label="아기자기 손글씨">
+                <option value="'Gaegu', cursive">개구체</option>
+                <option value="'Hi Melody', cursive">하이멜로디</option>
+                <option value="'Gamja Flower', cursive">감자꽃체</option>
+                <option value="'Nanum Pen Script', cursive">나눔펜체</option>
+                <option value="'Nanum Brush Script', cursive">나눔붓체</option>
+                <option value="'Poor Story', cursive">푸버스토리</option>
+            </optgroup>
+            <optgroup label="강력한 존재감">
+                <option value="'Black Han Sans', sans-serif">검은고딕</option>
+                <option value="'Do Hyeon', sans-serif">도현체</option>
+                <option value="'Black And White Picture', sans-serif">흑백사진체</option>
+                <option value="'Kirang Haerang', cursive">기랑해랑</option>
+                <option value="'Sunflower', sans-serif">해바라기체</option>
+            </optgroup>
+            <optgroup label="감성적인 정갈함">
+                <option value="'Gowun Dodum', sans-serif">고운도둠</option>
+                <option value="'Gowun Batang', serif">고운바탕</option>
+                <option value="'Hahmlet', serif">함렛</option>
+                <option value="'Yeon Sung', cursive">연성체</option>
+                <option value="'Song Myung', serif">송명체</option>
+                <option value="'Nanum Gothic', sans-serif">나눔고딕</option>
+            </optgroup>
+        </select>
+    </div>
+
+    <div class="section">
+        <h3>✨ 배경 아이콘 & 위치 설정</h3>
+        <select id="decoSelect" onchange="render()">
+            <option value="">아이콘 없음</option>
+            <option value="❤">하트 (Heart)</option>
+            <option value="⭐">별 (Star)</option>
+            <option value="☁">구름 (Cloud)</option>
+            <option value="🌸">꽃 (Flower)</option>
+            <option value="✨">반짝이 (Sparkle)</option>
+            <option value="🎀">리본 (Ribbon)</option>
+            <option value="🐾">발바닥 (Paw)</option>
+            <option value="👑">왕관 (Crown)</option>
+            <option value="🍭">사탕 (Candy)</option>
+            <option value="🌙">달 (Moon)</option>
+        </select>
+        <div class="row" style="margin-top:8px;">
+            <input type="color" id="decoColor" value="#ffd1dc" oninput="render()">
+            <label>투명도</label>
+            <input type="range" id="decoOpacity" min="0" max="100" value="60" oninput="render()">
+        </div>
+        <div class="row">
+            <label>크기</label>
+            <input type="range" id="decoSize" min="50" max="800" value="400" oninput="render()">
+        </div>
+        <div class="row">
+            <label>X축 이동</label>
+            <input type="range" id="decoX" min="-500" max="500" value="0" oninput="render()">
+        </div>
+        <div class="row">
+            <label>Y축 이동</label>
+            <input type="range" id="decoY" min="-300" max="300" value="0" oninput="render()">
+        </div>
+        <div class="row">
+            <label>회전</label>
+            <input type="range" id="decoRotate" min="-180" max="180" value="0" oninput="render()">
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>🖌️ 글자 테두리 & 입체감</h3>
+        <div class="row">
+            <input type="color" id="strokeColor" value="#000000" oninput="render()">
+            <label>테두리</label>
+            <input type="range" id="strokeWidth" min="0" max="15" value="2" oninput="render()">
+        </div>
+        <div class="row">
+            <label>3D 두께</label>
+            <input type="range" id="depth" min="0" max="40" value="15" oninput="render()">
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>🌈 그라데이션</h3>
+        <div id="colorContainer">
+            <div class="row">
+                <input type="color" class="c-val" value="#ff9a9e" oninput="render()">
+                <input type="range" class="c-pos" min="0" max="100" value="0" oninput="render()">
+            </div>
+            <div class="row">
+                <input type="color" class="c-val" value="#fecfef" oninput="render()">
+                <input type="range" class="c-pos" min="0" max="100" value="100" oninput="render()">
+            </div>
+        </div>
+        <button class="btn-add" onclick="addColor()">+ 색상 추가</button>
+    </div>
+
+    <button class="btn-save" onclick="exportPNG()">고화질 PNG 저장</button>
+</div>
+
+<div class="main-content">
+    <div id="decoIcon"></div>
+    <div id="previewText">FLEX</div>
+</div>
+
+<canvas id="exportCanvas"></canvas>
+
+<script>
+    function addColor() {
+        const container = document.getElementById('colorContainer');
+        if(container.children.length >= 5) return;
+        const div = document.createElement('div');
+        div.className = 'row';
+        div.innerHTML = `
+            <input type="color" class="c-val" value="#ffffff" oninput="render()">
+            <input type="range" class="c-pos" min="0" max="100" value="50" oninput="render()">
+            <button onclick="this.parentElement.remove(); render();" style="border:none; background:none; cursor:pointer;">❌</button>
+        `;
+        container.appendChild(div);
+        render();
+    }
+
+    function render() {
+        const text = document.getElementById('nickInput').value.trim() || "FLEX";
+        const preview = document.getElementById('previewText');
+        const deco = document.getElementById('decoIcon');
+        
+        // 1. 글자 렌더링
+        preview.innerText = text;
+        preview.style.fontFamily = document.getElementById('fontSelect').value;
+        preview.style.webkitTextStroke = `${document.getElementById('strokeWidth').value}px ${document.getElementById('strokeColor').value}`;
+
+        const colors = document.querySelectorAll('.c-val');
+        const positions = document.querySelectorAll('.c-pos');
+        let grad = "";
+        colors.forEach((c, i) => grad += `${c.value} ${positions[i].value}%${i === colors.length - 1 ? '' : ','}`);
+
+        const d = document.getElementById('depth').value;
+        let shadows = "";
+        for(let i = 1; i <= d; i++) shadows += `0 ${i}px 0 #444${i == d ? '' : ','}`;
+
+        preview.style.background = `linear-gradient(to bottom, ${grad})`;
+        preview.style.webkitBackgroundClip = "text";
+        preview.style.webkitTextFillColor = "transparent";
+        preview.style.textShadow = shadows;
+
+        // 2. 데코 아이콘 렌더링
+        const selectedDeco = document.getElementById('decoSelect').value;
+        deco.innerText = selectedDeco;
+        deco.style.color = document.getElementById('decoColor').value;
+        deco.style.opacity = document.getElementById('decoOpacity').value / 100;
+        deco.style.fontSize = document.getElementById('decoSize').value + "px";
+        
+        // 위치 및 회전 적용
+        const x = document.getElementById('decoX').value;
+        const y = document.getElementById('decoY').value;
+        const rotate = document.getElementById('decoRotate').value;
+        deco.style.transform = `translate(${x}px, ${y}px) rotate(${rotate}deg)`;
+    }
+
+    function exportPNG() {
+        const text = document.getElementById('nickInput').value || "FLEX";
+        const canvas = document.getElementById('exportCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 1800; canvas.height = 1000;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        // 1. 데코 그리기
+        const selectedDeco = document.getElementById('decoSelect').value;
+        if(selectedDeco) {
+            ctx.save();
+            ctx.translate(centerX + parseInt(document.getElementById('decoX').value) * 1.5, 
+                          centerY + parseInt(document.getElementById('decoY').value) * 1.5);
+            ctx.rotate(document.getElementById('decoRotate').value * Math.PI / 180);
+            ctx.globalAlpha = document.getElementById('decoOpacity').value / 100;
+            ctx.fillStyle = document.getElementById('decoColor').value;
+            ctx.font = `${document.getElementById('decoSize').value * 1.5}px Arial`;
+            ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.fillText(selectedDeco, 0, 0);
+            ctx.restore();
+        }
+
+        // 2. 글자 그리기
+        const fontName = document.getElementById('fontSelect').value.split(',')[0].replace(/'/g, "");
+        ctx.font = `bold 250px "${fontName}"`;
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        
+        const d = parseInt(document.getElementById('depth').value);
+        ctx.fillStyle = "#444";
+        for(let i = 1; i <= d; i++) ctx.fillText(text, centerX, centerY + i);
+
+        const sWidth = parseInt(document.getElementById('strokeWidth').value);
+        if(sWidth > 0) {
+            ctx.strokeStyle = document.getElementById('strokeColor').value;
+            ctx.lineWidth = sWidth * 3;
+            ctx.strokeText(text, centerX, centerY);
+        }
+
+        const colors = document.querySelectorAll('.c-val');
+        const positions = document.querySelectorAll('.c-pos');
+        const gradient = ctx.createLinearGradient(centerX, centerY - 120, centerX, centerY + 120);
+        colors.forEach((c, i) => gradient.addColorStop(positions[i].value/100, c.value));
+        ctx.fillStyle = gradient;
+        ctx.fillText(text, centerX, centerY);
+
+        const link = document.createElement('a');
+        link.download = `3d_pro_logo.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+    }
+    
+    render();
+</script>
+</body>
+</html>

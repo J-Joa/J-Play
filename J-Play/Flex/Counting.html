@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>음원 반복 카운터</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f2f5; margin: 0; }
+        .container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; width: 350px; }
+        h2 { color: #333; }
+        .status { margin: 20px 0; font-size: 1.2em; color: #555; }
+        .count-display { font-size: 2.5em; font-weight: bold; color: #007bff; margin: 10px 0; }
+        .controls { margin-top: 20px; display: flex; justify-content: center; gap: 10px; }
+        button { padding: 10px 20px; font-size: 1em; cursor: pointer; border: none; border-radius: 5px; transition: 0.2s; }
+        .btn-plus { background-color: #28a745; color: white; }
+        .btn-minus { background-color: #dc3545; color: white; }
+        .btn-reset { background-color: #6c757d; color: white; }
+        input[type="file"] { margin: 20px 0; width: 100%; }
+        .goal-section { margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; }
+        input[type="number"] { width: 60px; padding: 5px; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🎵 반복 카운터</h2>
+    
+    <input type="file" id="audioFile" accept="audio/*">
+    
+    <div class="status">
+        <span id="fileName">파일을 선택해주세요</span><br>
+        <small id="duration">재생 시간: 00:00</small>
+    </div>
+
+    <audio id="player" style="width: 100%; margin: 10px 0;" controls></audio>
+
+    <div class="count-display" id="currentCount">[0] / 10</div>
+    <div style="color: #888; font-size: 0.9em;">진행 상황 (현재 / 목표)</div>
+
+    <div class="controls">
+        <button class="btn-minus" onclick="changeCount(-1)">-1</button>
+        <button class="btn-plus" onclick="changeCount(1)">+1</button>
+        <button class="btn-reset" onclick="resetCount()">리셋</button>
+    </div>
+
+    <div class="goal-section">
+        <p>목표 설정: <input type="number" id="goalCount" value="10" min="1"> 회</p>
+        <p id="message" style="color: #28a745; font-weight: bold; min-height: 1.2em;"></p>
+    </div>
+</div>
+
+<script>
+    const audioFile = document.getElementById('audioFile');
+    const player = document.getElementById('player');
+    const fileNameDisplay = document.getElementById('fileName');
+    const durationDisplay = document.getElementById('duration');
+    const currentCountDisplay = document.getElementById('currentCount');
+    const goalInput = document.getElementById('goalCount');
+    const message = document.getElementById('message');
+
+    let count = 0;
+
+    // 파일 선택 시
+    audioFile.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const url = URL.createObjectURL(file);
+            player.src = url;
+            fileNameDisplay.innerText = file.name;
+            
+            player.onloadedmetadata = function() {
+                const min = Math.floor(player.duration / 60);
+                const sec = Math.floor(player.duration % 60);
+                durationDisplay.innerText = `재생 시간: ${min}:${sec < 10 ? '0'+sec : sec}`;
+            };
+        }
+    });
+
+    // 오디오 재생 완료 시
+    player.addEventListener('ended', function() {
+        count++;
+        updateDisplay();
+        
+        if (count >= parseInt(goalInput.value)) {
+            message.innerText = "🎉 목표를 달성했습니다!";
+            player.pause();
+        } else {
+            player.play(); 
+        }
+    });
+
+    // 목표 숫자 변경 시 즉시 반영
+    goalInput.addEventListener('input', updateDisplay);
+
+    function changeCount(val) {
+        count += val;
+        if (count < 0) count = 0;
+        updateDisplay();
+        
+        // 목표 체크 해제/설정 (수동 조작 시)
+        if (count < parseInt(goalInput.value)) {
+            message.innerText = "";
+        } else {
+            message.innerText = "🎉 목표를 달성했습니다!";
+        }
+    }
+
+    function resetCount() {
+        if(confirm("카운트를 초기화할까요?")) {
+            count = 0;
+            updateDisplay();
+            message.innerText = "";
+        }
+    }
+
+    // [현재] / 목표 형식으로 업데이트
+    function updateDisplay() {
+        const goal = goalInput.value || 0;
+        currentCountDisplay.innerText = `[${count}] / ${goal}`;
+    }
+</script>
+
+</body>
+</html>

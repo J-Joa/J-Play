@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>나만의 엑셀 칸 계산기</title>
+    <style>
+        body { font-family: 'Pretendard', sans-serif; background-color: #f8f9fa; display: flex; justify-content: center; padding: 40px; }
+        .container { display: flex; gap: 20px; width: 800px; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); flex: 1; }
+        h2 { font-size: 1.1rem; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; color: #333; }
+        
+        /* 테이블 스타일 */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        th, td { padding: 10px; border-bottom: 1px solid #eee; text-align: center; }
+        input[type="number"] { width: 80px; padding: 5px; border: 1px solid #ddd; border-radius: 4px; }
+        
+        .btn { cursor: pointer; border: none; border-radius: 4px; padding: 5px 10px; transition: 0.2s; }
+        .btn-add { background: #2ecc71; color: white; width: 100%; padding: 10px; margin-top: 10px; }
+        .btn-del { background: #ff7675; color: white; }
+        
+        /* 계산 결과 섹션 */
+        .calc-input { width: 100%; padding: 15px; font-size: 1.2rem; border: 2px solid #3498db; border-radius: 8px; box-sizing: border-box; margin-bottom: 20px; }
+        .result-display { background: #3498db; color: white; padding: 30px; border-radius: 10px; text-align: center; }
+        .result-num { font-size: 3rem; font-weight: bold; display: block; }
+        .info-text { font-size: 0.85rem; color: #666; margin-top: 15px; line-height: 1.5; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+        <h2>① 기준 데이터 등록</h2>
+        <table id="criteriaTable">
+            <thead>
+                <tr>
+                    <th>숫자</th>
+                    <th>칸수</th>
+                    <th>삭제</th>
+                </tr>
+            </thead>
+            <tbody id="criteriaBody">
+                <tr>
+                    <td><input type="number" class="base-num" value="176"></td>
+                    <td><input type="number" class="base-grid" value="2"></td>
+                    <td><button class="btn btn-del" onclick="deleteRow(this)">X</button></td>
+                </tr>
+                <tr>
+                    <td><input type="number" class="base-num" value="376"></td>
+                    <td><input type="number" class="base-grid" value="4"></td>
+                    <td><button class="btn btn-del" onclick="deleteRow(this)">X</button></td>
+                </tr>
+                <tr>
+                    <td><input type="number" class="base-num" value="1476"></td>
+                    <td><input type="number" class="base-grid" value="15"></td>
+                    <td><button class="btn btn-del" onclick="deleteRow(this)">X</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <button class="btn btn-add" onclick="addRow()">+ 기준 추가하기</button>
+        <p class="info-text">* 입력하신 데이터들의 평균 비율로 계산됩니다.</p>
+    </div>
+
+    <div class="card">
+        <h2>② 실시간 계산기</h2>
+        <label style="display:block; margin-bottom:8px; font-weight:bold;">숫자 입력</label>
+        <input type="number" id="targetInput" class="calc-input" placeholder="예: 500" oninput="doCalc()">
+        
+        <div class="result-display">
+            <span style="opacity: 0.8;">결과</span>
+            <span id="finalResult" class="result-num">0</span>
+            <span>칸</span>
+        </div>
+        <p class="info-text">※ 0.5 이상은 +1칸으로 자동 반올림됩니다.</p>
+    </div>
+</div>
+
+<script>
+    function addRow() {
+        const tbody = document.getElementById('criteriaBody');
+        const row = `<tr>
+            <td><input type="number" class="base-num" value="0"></td>
+            <td><input type="number" class="base-grid" value="0"></td>
+            <td><button class="btn btn-del" onclick="deleteRow(this)">X</button></td>
+        </tr>`;
+        tbody.insertAdjacentHTML('beforeend', row);
+    }
+
+    function deleteRow(btn) {
+        btn.parentElement.parentElement.remove();
+        doCalc();
+    }
+
+    function doCalc() {
+        const baseNums = document.querySelectorAll('.base-num');
+        const baseGrids = document.querySelectorAll('.base-grid');
+        const target = parseFloat(document.getElementById('targetInput').value);
+        const resultElement = document.getElementById('finalResult');
+
+        if (!target || baseNums.length === 0) {
+            resultElement.innerText = "0";
+            return;
+        }
+
+        // 1. 등록된 모든 데이터의 평균 비율(1칸당 숫자) 계산
+        let totalRatio = 0;
+        let count = 0;
+
+        for (let i = 0; i < baseNums.length; i++) {
+            let n = parseFloat(baseNums[i].value);
+            let g = parseFloat(baseGrids[i].value);
+            if (n > 0 && g > 0) {
+                totalRatio += (n / g);
+                count++;
+            }
+        }
+
+        const avgRatio = totalRatio / count;
+
+        // 2. 입력값을 평균 비율로 나누고 반올림 (0.5 이상 +1)
+        if (avgRatio > 0) {
+            const finalVal = Math.round(target / avgRatio);
+            resultElement.innerText = finalVal;
+        }
+    }
+
+    // 입력값 변경 시 실시간 반영을 위해 이벤트 리스너 추가
+    document.addEventListener('input', function(e) {
+        if(e.target.classList.contains('base-num') || e.target.classList.contains('base-grid')) {
+            doCalc();
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emet JS - 방송 도구 모음</title>
+    <style>
+        body { font-family: 'Pretendard', sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { width: 90%; max-width: 500px; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
+        h1 { color: #333; margin-bottom: 25px; font-size: 1.5rem; }
+        .menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .menu-btn { 
+            display: block; padding: 18px; background: #1a73e8; color: white; 
+            text-decoration: none; border-radius: 12px; font-weight: bold; 
+            font-size: 1.1rem; transition: transform 0.2s, background 0.2s;
+        }
+        .menu-btn:hover { background: #1557b0; transform: translateY(-3px); }
+        .menu-btn.tool { background: #34a853; } /* 도구류는 초록색 */
+        .menu-btn.game { background: #ea4335; } /* 게임류는 빨간색 */
+        .footer { margin-top: 25px; font-size: 0.85rem; color: #999; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🎮 방송 도구 & 게임 메뉴</h1>
+    
+    <div class="menu-grid">
+        <a href="chat_viewer.html" class="menu-btn tool">📊 실시간 채팅 순위 뷰어</a>
+        
+        <a href="FundingCal.html" class="menu-btn tool">🐾 스마트 관리자 v3</a>
+        <a href="TextMaker.html" class="menu-btn tool">✨ 3D 로고 스튜디오</a>
+        <a href="RoulletteCal.html" class="menu-btn tool">🎲 룰렛 칸 계산기</a>
+        <a href="Counting.html" class="menu-btn tool">🎵 음원 반복 카운터</a>
+        
+        <a href="UpDownGame.html" class="menu-btn game">🎯 업다운 게임</a>
+    </div>
+
+    <div class="footer">© 2026 Emet JS. All tools are ready.</div>
+</div>
+
+</body>
+</html>

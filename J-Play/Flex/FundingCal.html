@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>스마트 관리자 v3</title>
+    <style>
+        body { font-family: 'Pretendard', sans-serif; padding: 20px; background-color: #f8f9fa; color: #333; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        h2 { text-align: center; margin-bottom: 20px; color: #222; }
+        
+        .item-list { margin-bottom: 20px; }
+        .item-row { 
+            display: flex; align-items: center; 
+            background: #fff; border: 1px solid #eee; 
+            padding: 12px; border-radius: 10px; margin-bottom: 10px;
+        }
+        
+        .info { flex: 1; display: flex; flex-direction: column; }
+        .title { font-weight: bold; font-size: 15px; margin-bottom: 4px; }
+        .status { font-family: 'Courier New', monospace; font-weight: bold; color: #007bff; font-size: 16px; }
+        
+        /* 달성 배지 스타일 */
+        .achieve-container { display: flex; align-items: center; gap: 4px; margin-top: 5px; }
+        .achieve-badge { 
+            background: #e7f3ff; color: #007bff; padding: 4px 10px; 
+            border-radius: 12px; font-size: 12px; font-weight: bold;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .btn-minus-achieve { 
+            background: #007bff; color: white; border: none; cursor: pointer; 
+            width: 16px; height: 16px; border-radius: 50%; line-height: 14px;
+            font-size: 14px; padding: 0; display: flex; align-items: center; justify-content: center;
+        }
+        .btn-minus-achieve:hover { background: #ff5c5c; }
+
+        .controls { display: flex; align-items: center; gap: 8px; }
+        .input-box { width: 60px; padding: 6px; border: 1px solid #ddd; border-radius: 5px; text-align: center; }
+        .btn-del { 
+            background: #ffeded; color: #ff5c5c; border: none; 
+            width: 30px; height: 30px; border-radius: 5px; cursor: pointer; font-weight: bold;
+        }
+
+        .add-section { background: #f1f3f5; padding: 15px; border-radius: 10px; margin-top: 20px; }
+        .add-inputs { display: flex; gap: 5px; margin-bottom: 10px; }
+        .add-inputs input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
+        .btn-add { width: 100%; padding: 10px; background: #333; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        
+        .summary { text-align: center; font-size: 12px; color: #999; margin-top: 15px; line-height: 1.6; }
+        .empty-msg { text-align: center; color: #ccc; padding: 20px 0; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🐾관리 표</h2>
+    
+    <div id="list-container" class="item-list"></div>
+
+    <div class="add-section">
+        <div class="add-inputs">
+            <input type="text" id="new-title" placeholder="항목 이름">
+            <input type="number" id="new-goal" placeholder="목표치">
+        </div>
+        <button class="btn-add" onclick="addNewItem()">+ 새로운 항목 추가</button>
+    </div>
+
+    <div class="summary">
+        • 숫자 입력 후 <b>Enter</b>: 현재 값 합산<br>
+        • 달성 시 차액 이월 & <b>달성 +1</b><br>
+        • 달성 배지의 <b>-</b> 버튼: 달성 횟수 1씩 차감
+    </div>
+</div>
+
+<script>
+    // 초기 데이터를 빈 배열([])로 설정하여 아무것도 없는 상태로 시작합니다.
+    let items = JSON.parse(localStorage.getItem('suangSmartDataV3')) || [];
+
+    function render() {
+        const container = document.getElementById('list-container');
+        container.innerHTML = '';
+
+        if (items.length === 0) {
+            container.innerHTML = '<div class="empty-msg">추가된 항목이 없습니다. 항목을 추가해주세요!</div>';
+        } else {
+            items.forEach((item, index) => {
+                const row = document.createElement('div');
+                row.className = 'item-row';
+                
+                const achieveHtml = item.count > 0 ? `
+                    <div class="achieve-container">
+                        <span class="achieve-badge">
+                            달성 +${item.count}
+                            <button class="btn-minus-achieve" onclick="minusAchieve(${index})" title="달성 1회 차감">−</button>
+                        </span>
+                    </div>
+                ` : '';
+
+                row.innerHTML = `
+                    <div class="info">
+                        <span class="title">${item.title}</span>
+                        <span class="status">(${item.current}/${item.goal})</span>
+                        ${achieveHtml}
+                    </div>
+                    <div class="controls">
+                        <input type="number" class="input-box" placeholder="+/-" 
+                            onkeypress="if(event.keyCode==13) handleUpdate(${index}, this)">
+                        <button class="btn-del" onclick="deleteItem(${index})">X</button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        localStorage.setItem('suangSmartDataV3', JSON.stringify(items));
+    }
+
+    function handleUpdate(index, input) {
+        const val = parseInt(input.value);
+        if (isNaN(val)) return;
+
+        let item = items[index];
+        item.current += val;
+
+        while (item.current >= item.goal && item.goal > 0) {
+            item.current -= item.goal;
+            item.count += 1;
+        }
+
+        input.value = '';
+        render();
+    }
+
+    function minusAchieve(index) {
+        if (items[index].count > 0) {
+            items[index].count -= 1;
+            render();
+        }
+    }
+
+    function addNewItem() {
+        const titleInput = document.getElementById('new-title');
+        const goalInput = document.getElementById('new-goal');
+        const title = titleInput.value;
+        const goal = parseInt(goalInput.value);
+
+        if (!title || isNaN(goal) || goal <= 0) {
+            alert("정확한 값을 입력해주세요!");
+            return;
+        }
+
+        items.push({ title: title, current: 0, goal: goal, count: 0 });
+        titleInput.value = '';
+        goalInput.value = '';
+        render();
+    }
+
+    function deleteItem(index) {
+        if(confirm(`'${items[index].title}' 항목을 삭제할까요?`)) {
+            items.splice(index, 1);
+            render();
+        }
+    }
+
+    render();
+</script>
+
+</body>
+</html>

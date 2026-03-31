@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>FlexTV 날짜별 랭킹 뷰어 v5.0</title>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; background: #f0f2f5; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; }
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 25px; }
+        h1, h2 { text-align: center; color: #1a73e8; }
+        .controls { display: flex; gap: 15px; justify-content: center; margin-bottom: 20px; }
+        input, button { padding: 12px; border-radius: 8px; border: 1px solid #ddd; outline: none; }
+        button { background: #1a73e8; color: white; cursor: pointer; border: none; font-weight: bold; }
+        
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .rank-box { background: #fff; padding: 20px; border-radius: 10px; border: 1px solid #e0e0e0; }
+        .rank-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed #eee; }
+        .rank-pos { font-weight: bold; color: #ff5722; width: 50px; }
+        .rank-nick { flex: 1; font-weight: 500; }
+        .rank-cnt { font-weight: bold; color: #1a73e8; }
+        .rank-item:last-child { border-bottom: none; }
+        .no-data { text-align: center; color: #999; padding: 40px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>🏆 FlexTV 날짜별 랭킹 뷰어 v5.0</h1>
+            <div class="controls">
+                <input type="text" id="channelId" placeholder="채널 ID (숫자)">
+                <input type="date" id="targetDate">
+                <button onclick="loadRank()">데이터 조회</button>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="rank-box">
+                <h2 id="dailyTitle">📅 일간 채팅 TOP</h2>
+                <div id="dailyRankBody" class="no-data">날짜를 선택하고 조회하세요.</div>
+            </div>
+
+            <div class="rank-box">
+                <h2 id="monthlyTitle">📊 월간 누적 TOP</h2>
+                <div id="monthlyRankBody" class="no-data">채널 ID를 입력하세요.</div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // 페이지가 로드될 때 실행
+    window.onload = () => {
+        // 오늘 날짜 기본 설정
+        document.getElementById('targetDate').valueAsDate = new Date();
+        
+        // 저장된 채널 ID가 있다면 불러와서 입력창에 넣기
+        const savedChId = localStorage.getItem('lastChannelId');
+        if (savedChId) {
+            document.getElementById('channelId').value = savedChId;
+        }
+    };
+
+    async function loadRank() {
+        const chId = document.getElementById('channelId').value;
+        const rawDate = document.getElementById('targetDate').value;
+        
+        if (!chId || !rawDate) return alert("ID와 날짜를 입력해주세요.");
+
+        // 조회 버튼을 누르는 순간 채널 ID를 브라우저에 저장
+        localStorage.setItem('lastChannelId', chId);
+
+        const dateObj = new Date(rawDate);
+        const dateKey = `${dateObj.getFullYear()}-${dateObj.getMonth() + 1}-${dateObj.getDate()}`;
+        const monthKey = `${dateObj.getFullYear()}-${dateObj.getMonth() + 1}`;
+
+        const dailyUrl = `https://myflexhelper-121f0-default-rtdb.firebaseio.com/dailyStats/${chId}/${dateKey}.json`;
+        const channelUrl = `https://myflexhelper-121f0-default-rtdb.firebaseio.com/channels/${chId}.json`;
+
+        try {
+            const [dailyRes, channelRes] = await Promise.all([fetch(dailyUrl), fetch(channelUrl)]);
+            const dailyData = await dailyRes.json();
+            const channelData = await channelRes.json();
+
+            if (!channelData) return alert("채널 정보가 없습니다.");
+
+            const dailyContainer = document.getElementById('dailyRankBody');
+            if (dailyData) {
+                renderList(dailyContainer, dailyData, channelData.nickMap, "회");
+            } else {
+                dailyContainer.innerHTML = "<div class='no-data'>해당 날짜의 기록이 없습니다.</div>";
+            }
+
+            const monthlyContainer = document.getElementById('monthlyRankBody');
+            if (channelData.monthlyStats && channelData.monthlyStats[monthKey]) {
+                renderList(monthlyContainer, channelData.monthlyStats[monthKey], channelData.nickMap, "회");
+            } else {
+                monthlyContainer.innerHTML = "<div class='no-data'>해당 월의 기록이 없습니다.</div>";
+            }
+
+            document.getElementById('dailyTitle').innerText = `📅 ${dateKey} 랭킹`;
+            document.getElementById('monthlyTitle').innerText = `📊 ${monthKey} 누적`;
+
+        } catch (e) {
+            alert("데이터를 불러오는 중 오류가 발생했습니다.");
+        }
+    }
+
+    function renderList(container, sourceData, nickMap, unit) {
+        const sorted = Object.entries(sourceData).sort((a,b) => b[1] - a[1]);
+        container.innerHTML = "";
+        
+        sorted.forEach(([id, val], index) => {
+            const nick = (nickMap && nickMap[id]) ? nickMap[id] : `익명(${id})`;
+            container.insertAdjacentHTML('beforeend', `
+                <div class="rank-item">
+                    <span class="rank-pos">${index + 1}위</span>
+                    <span class="rank-nick">${nick}</span>
+                    <span class="rank-cnt">${val}${unit}</span>
+                </div>
+            `);
+        });
+    }
+</script>
+</body>
+</html>
