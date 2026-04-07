@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <a href="https://j-joa.github.io/J-Play/J-Play/Game12/indexC.html" target="_blank" class="base-text on-effect">
+            <span class="num">100</span><span class="txt">치킨사다리</span>
+        </a>
+        <a href="http://sciencej.cafe24.com/html5/select2/select2.html" target="_blank" class="base-text on-effect">
+            <span class="num">110</span><span class="txt">띵뽑기</span>
+        </a>
+        
+        <div class="base-text on-effect hover-parent">
+            <span class="num">172</span><span class="txt">뽑기판</span>
+            <div class="hover-menu">
+                <div class="sub-item">1등: 식데 or 배민10</div>
+                <div class="sub-item">2등: 치데 or 배민5</div>
+                <div class="sub-item">3등: 배민2</div>
+                <div class="sub-item" style="text-decoration:underline; cursor:pointer;" onclick="window.open('menu.html', 'M', 'width=600,height=800')">4등: 원하는 리액션</div>
+                <div class="sub-item">5등: 안타깝구룡(냠)</div>
+            </div>
+        </div>
+
+        <a href="https://j-joa.github.io/J-Play/J-Play/Game12/indexP.html" target="_blank" class="base-text on-effect">
+            <span class="num">200</span><span class="txt">피자사다리</span>
+        </a>
+
+        <div class="base-text"><span class="num">272</span><span class="txt">랜덤상품핀볼</span></div>
+
+        <div class="divider"></div>
+
+        <div class="base-text"><span class="num">72</span><span class="txt">시그댄스 룰렛</span></div>
+        <div class="base-text"><span class="num">73</span><span class="txt">스키</span></div>
+        <div class="base-text"><span class="num">92</span><span class="txt">역도</span></div>
+
+        <div class="divider"></div>
+
+        <div class="base-text on-effect" style="cursor:pointer;" onclick="toggleSection('time1')">
+            <span class="num">77/78</span><span class="txt">시간룰렛</span>
+        </div>
+        <div id="time1" style="display:none; margin-left:25px;">
+            <div class="base-text"><span class="num">77</span><span class="txt">시간연장룰렛</span></div>
+            <div class="base-text"><span class="num">78</span><span class="txt">시간감소룰렛</span></div>
+        </div>
+
+        <div class="base-text on-effect" style="cursor:pointer;" onclick="toggleSection('time2')">
+            <span class="num">770/780</span><span class="txt">큰시간룰렛</span>
+        </div>
+        <div id="time2" style="display:none; margin-left:25px;">
+            <div class="base-text"><span class="num">770</span><span class="txt">큰시간연장룰렛</span></div>
+            <div class="base-text"><span class="num">780</span><span class="txt">큰시간감소룰렛</span></div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSection(id) {
+            const el = document.getElementById(id);
+            el.style.display = (el.style.display === "none") ? "block" : "none";
+        }
+    </script>
+</body>
+</html>

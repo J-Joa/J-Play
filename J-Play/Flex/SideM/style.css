@@ -1,0 +1,43 @@
+body { background: transparent; margin: 0; padding: 25px; font-family: 'Arial Black', sans-serif; overflow: hidden; }
+.container { display: flex; flex-direction: column; gap: 10px; }
+
+/* 2D 찌꺼기 없이 깔끔하게 3D 효과만 적용 */
+.base-text {
+    font-size: 3.2vw; font-weight: bold; text-decoration: none;
+    display: block; width: fit-content; margin-bottom: 5px;
+    transition: 0.2s ease;
+    /* 배경이나 중복 요소를 제거하여 겹침 방지 */
+    background: none;
+    border: none;
+}
+
+/* 숫자(노란색) 3D 효과 */
+.base-text span.num { 
+    color: #FFCC00; 
+    text-shadow: 0 1px 0 #B8860B, 0 2px 0 #8B6508, 0 3px 0 #4D3900, 0 5px 8px rgba(0,0,0,0.5); 
+}
+
+/* 글자(베이지색) 3D 효과 */
+.base-text span.txt { 
+    color: #F5DEB3; margin-left: 10px; 
+    text-shadow: 0 1px 0 #D2B48C, 0 2px 0 #BC8F8F, 0 3px 0 #8B4513, 0 5px 8px rgba(0,0,0,0.5); 
+}
+
+/* 상단 4개 + 시간룰렛 메인: 마우스 대면 밝아지는 효과 */
+.on-effect:hover {
+    filter: brightness(1.6);
+    transform: translateY(-3px);
+    cursor: pointer;
+}
+
+/* 뽑기 메뉴 레이어 */
+.hover-parent { position: relative; z-index: 1000; }
+.hover-menu {
+    display: none; position: absolute; left: 105%; top: -10px;
+    background: rgba(0, 0, 0, 0.95); padding: 15px; 
+    border: 2px solid #F5DEB3; border-radius: 8px; z-index: 9999;
+}
+.hover-parent:hover .hover-menu { display: block; }
+
+.sub-item { color: #F5DEB3; font-size: 1.8vw; margin-bottom: 8px; white-space: nowrap; }
+.divider { border-bottom: 2px dashed rgba(255,255,255,0.2); margin: 12px 0; width: 150px; }

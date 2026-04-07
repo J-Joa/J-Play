@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>제이 리액션 메뉴</title>
+    <link rel="stylesheet" href="menu_style.css">
+</head>
+<body>
+    <div class="admin-panel">
+        <textarea id="admin-input" placeholder="여기에 리액션 목록을 입력하세요..."></textarea>
+    </div>
+    <div id="display-area" class="reaction-container"></div>
+
+    <script>
+        const input = document.getElementById('admin-input');
+        const display = document.getElementById('display-area');
+
+        window.onload = () => {
+            const saved = localStorage.getItem('j_re_list_v2');
+            if (saved) { input.value = saved; render(saved); }
+        };
+
+        input.addEventListener('input', () => {
+            render(input.value);
+            localStorage.setItem('j_re_list_v2', input.value);
+        });
+
+        function render(text) {
+            display.innerHTML = '';
+            text.split('\n').forEach(line => {
+                if(line.trim()) {
+                    const div = document.createElement('div');
+                    div.className = 'item-3d';
+                    div.innerText = line;
+                    display.appendChild(div);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

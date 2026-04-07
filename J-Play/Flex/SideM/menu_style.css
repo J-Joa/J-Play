@@ -1,0 +1,29 @@
+/* 리액션판은 배경을 어둡게 깔아 가독성 확보 */
+body { 
+    background: #0f0f0f; 
+    margin: 0; padding: 30px; 
+    color: #fff; font-family: 'Pretendard', 'Malgun Gothic', sans-serif; 
+}
+
+#admin-input { 
+    width: 100%; height: 40px; background: #222; color: #ff4da6; 
+    border: 1px solid #ff4da6; border-radius: 5px; padding: 5px 10px;
+    margin-bottom: 20px;
+}
+
+.reaction-container {
+    display: flex; flex-direction: column; flex-wrap: wrap;
+    align-content: flex-start; gap: 20px 80px; height: 80vh;
+}
+
+/* 네온 핑크 스타일의 독자적 3D 디자인 */
+.item-3d {
+    font-size: 32px; font-weight: 800; color: #fff;
+    text-shadow: 
+        0 0 5px #ff4da6, 0 0 10px #ff4da6, 
+        3px 3px 0 #333; 
+    white-space: nowrap;
+    border-left: 6px solid #ff4da6;
+    padding-left: 15px;
+    margin-bottom: 5px;
+}
