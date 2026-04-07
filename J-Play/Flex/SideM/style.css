@@ -1,4 +1,17 @@
-body { background: transparent; margin: 0; padding: 25px; font-family: 'Arial Black', sans-serif; overflow: hidden; }
+body { 
+    background: transparent; 
+    margin: 0; 
+    padding: 25px; 
+    font-family: 'Arial Black', sans-serif; 
+    /* 스크롤바가 아예 안 보이게 숨기기 (모든 브라우저 대응) */
+    -ms-overflow-style: none; /* IE, Edge */
+    scrollbar-width: none; /* Firefox */
+}
+
+/* 크롬, 사파리, OBS 브라우저 소스용 스크롤바 숨기기 */
+body::-webkit-scrollbar {
+    display: none;
+}
 .container { display: flex; flex-direction: column; gap: 10px; }
 
 /* 2D 찌꺼기 없이 깔끔하게 3D 효과만 적용 */
