@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>제이방 구독 보상 사다리</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f7f6; display: flex; flex-direction: column; align-items: center; padding: 10px; }
+        .container { background: #fff; padding: 20px; border-radius: 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); width: 860px; text-align: center; border: 3px solid #3498db; }
+        h1 { color: #2c3e50; margin-bottom: 10px; font-size: 1.6rem; }
+        
+        .month-selector { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; padding: 10px; background: #ebf5fb; border-radius: 12px; }
+        .m-btn { padding: 10px 20px; border: 2px solid #3498db; background: #fff; color: #3498db; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .m-btn.active { background: #3498db; color: #fff; }
+
+        .top-btns { display: flex; justify-content: space-between; padding: 0 100px; margin-bottom: 10px; }
+        .n-btn { 
+            width: 60px; height: 60px; cursor: pointer; background: #34495e; color: #fff; border: none; border-radius: 50%; 
+            font-weight: bold; font-size: 1.4rem; transition: 0.2s; box-shadow: 0 4px 0 #2c3e50;
+        }
+        .n-btn:active { transform: translateY(4px); box-shadow: none; }
+        .n-btn:disabled { opacity: 0.4; }
+
+        canvas { background: #fff; border-radius: 10px; }
+
+        .bottom-list { display: flex; justify-content: space-between; padding: 0 60px; margin-top: 15px; }
+        .res-box { 
+            width: 140px; padding: 12px 0; text-align: center; border: 2px solid #bdc3c7; border-radius: 10px; 
+            font-weight: bold; font-size: 1.1rem; background: #fff; outline: none;
+        }
+        .res-box.active { background: #e74c3c; color: #fff; border-color: #c0392b; transform: scale(1.05); }
+
+        .controls { margin-top: 25px; display: flex; gap: 10px; justify-content: center; }
+        .btn-common { padding: 12px 35px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem; }
+        .shuffle-btn { background: #7f8c8d; color: white; }
+        .reset-btn { background: #2c3e50; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📅 제이방 구독 사다리</h1>
+
+    <div class="month-selector">
+        <button class="m-btn active" onclick="setReward('1,3개월', '🍗 치킨')">1,3개월</button>
+        <button class="m-btn" onclick="setReward('6개월', '🍕 피자')">6개월</button>
+        <button class="m-btn" onclick="setReward('9개월', '🍖 보족')">9개월</button>
+    </div>
+
+    <div class="top-btns">
+        <button class="n-btn" id="nb0" onclick="run(0)">1</button>
+        <button class="n-btn" id="nb1" onclick="run(1)">2</button>
+        <button class="n-btn" id="nb2" onclick="run(2)">3</button>
+        <button class="n-btn" id="nb3" onclick="run(3)">4</button>
+    </div>
+
+    <canvas id="ladder" width="800" height="350"></canvas>
+
+    <div class="bottom-list">
+        <input type="text" class="res-box" readonly>
+        <input type="text" class="res-box" readonly>
+        <input type="text" class="res-box" readonly>
+        <input type="text" class="res-box" readonly>
+    </div>
+
+    <div class="controls">
+        <button class="btn-common shuffle-btn" onclick="shuffleResults()">섞기</button>
+        <button class="btn-common reset-btn" onclick="init()">리셋</button>
+    </div>
+</div>
+
+<script>
+    const cvs = document.getElementById('ladder');
+    const ctx = cvs.getContext('2d');
+    const boxes = document.querySelectorAll('.res-box');
+    const btns = document.querySelectorAll('.n-btn');
+    const mBtns = document.querySelectorAll('.m-btn');
+    const pad = 100, colW = 200;
+    
+    let lines = [], isMoving = false, finishedPaths = [], answerMap = {}, gameStarted = false;
+    let currentMainReward = "🍗 치킨";
+
+    function setReward(label, reward) {
+        if(isMoving) return;
+        currentMainReward = reward;
+        mBtns.forEach(btn => btn.classList.toggle('active', btn.innerText === label));
+        applyRandomRewards();
+    }
+
+    function applyRandomRewards() {
+        let rewards = [currentMainReward, "다시", "꽝", "꽝"];
+        rewards.sort(() => Math.random() - 0.5);
+        boxes.forEach((box, i) => {
+            box.value = rewards[i];
+            box.classList.remove('active');
+        });
+    }
+
+    function shuffleResults() {
+        if(isMoving) return;
+        applyRandomRewards();
+    }
+
+    function init() {
+        lines = []; finishedPaths = []; isMoving = false; answerMap = {}; gameStarted = false;
+        btns.forEach(b => b.disabled = false);
+        boxes.forEach(b => b.classList.remove('active'));
+
+        for(let i=0; i<3; i++) {
+            let count = Math.floor(Math.random() * 5) + 1;
+            let stepY = 290 / count; 
+            for(let j=0; j<count; j++) {
+                let y = (j * stepY) + Math.random() * (stepY - 30) + 30;
+                lines.push({c: i, y: y, type: Math.random() > 0.5 ? 1 : 0, zig: Math.random() > 0.5 ? 15 : -15});
+            }
+        }
+        lines.sort((a,b) => a.y - b.y);
+        draw();
+        applyRandomRewards();
+    }
+
+    function run(startCol) {
+        if(isMoving) return;
+        isMoving = true; gameStarted = true;
+        document.getElementById('nb'+startCol).disabled = true;
+
+        let curX = pad + startCol * colW, curY = 0, curC = startCol;
+        let path = [{x: curX, y: 0}];
+        lines.forEach(l => {
+            if(l.y > curY && (l.c === curC || l.c === curC - 1)) {
+                path.push({x: curX, y: l.y});
+                if(l.type === 1) {
+                    let midX = (l.c === curC) ? curX + colW/2 : curX - colW/2;
+                    path.push({x: midX, y: l.y + l.zig});
+                }
+                curC = (l.c === curC) ? curC + 1 : curC - 1;
+                curX = pad + curC * colW;
+                curY = l.y;
+                path.push({x: curX, y: curY});
+            }
+        });
+        path.push({x: curX, y: 350});
+        
+        let emoji = currentMainReward.split(' ')[0];
+        animate(path, curC, emoji);
+    }
+
+    function animate(path, finalC, emoji) {
+        let step = 0, tx = path[0].x, ty = path[0].y, trail = [{x: tx, y: ty}];
+        function frame() {
+            if(step >= path.length - 1) {
+                finishedPaths.push(path);
+                boxes[finalC].classList.add('active');
+                isMoving = false; return;
+            }
+            let next = path[step+1], dx = next.x - tx, dy = next.y - ty, d = Math.sqrt(dx*dx+dy*dy);
+            let speed = 14; 
+            if(d < speed) { tx = next.x; ty = next.y; step++; }
+            else { tx += dx/d*speed; ty += dy/d*speed; }
+            trail.push({x: tx, y: ty});
+            draw();
+            ctx.beginPath(); ctx.strokeStyle = '#3498db'; ctx.lineWidth = 8;
+            ctx.moveTo(trail[0].x, trail[0].y); trail.forEach(p => ctx.lineTo(p.x, p.y)); ctx.stroke();
+            ctx.font = "34px serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.fillText(emoji, tx, ty);
+            requestAnimationFrame(frame);
+        }
+        frame();
+    }
+
+    function draw() {
+        ctx.clearRect(0,0,800,350);
+        ctx.strokeStyle = '#bdc3c7'; ctx.lineWidth = 5; ctx.lineCap = "round";
+        for(let i=0; i<4; i++) {
+            ctx.beginPath(); ctx.moveTo(pad+i*colW, 0); ctx.lineTo(pad+i*colW, 350); ctx.stroke();
+        }
+        if(gameStarted || finishedPaths.length > 0) {
+            lines.forEach(l => {
+                const x1 = pad + l.c * colW, x2 = x1 + colW;
+                ctx.beginPath(); ctx.moveTo(x1, l.y);
+                if(l.type === 1) ctx.lineTo(x1 + colW/2, l.y + l.zig);
+                ctx.lineTo(x2, l.y); ctx.stroke();
+            });
+        }
+        finishedPaths.forEach(p => {
+            ctx.beginPath(); ctx.strokeStyle = 'rgba(52, 152, 219, 0.15)'; ctx.lineWidth = 8;
+            ctx.moveTo(p[0].x, p[0].y); p.forEach(pt => ctx.lineTo(pt.x, pt.y)); ctx.stroke();
+        });
+    }
+    init();
+</script>
+</body>
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>제이방 사다리 게임</title>
+    <style>
+        body { font-family: sans-serif; background: #fdfcf0; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .container { background: #fff; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; border: 3px solid #f1c40f; min-width: 550px; }
+        
+        h1 { color: #333; margin: 0 0 15px 0; font-size: 1.6rem; }
+        
+        /* 상단 퀵 버튼 바 */
+        .quick-nav { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
+        .nav-btn { padding: 8px 15px; border: none; border-radius: 20px; color: white; font-weight: bold; cursor: pointer; font-size: 0.85rem; box-shadow: 0 3px 0 rgba(0,0,0,0.2); }
+        .btn-s { background: #9b59b6; } /* 구독: 보라 */
+        .btn-c { background: #e67e22; } /* 치킨: 주황 */
+        .btn-p { background: #e74c3c; } /* 피자: 빨강 */
+        .nav-btn:hover { opacity: 0.9; transform: translateY(1px); }
+
+        .setup { margin-bottom: 20px; background: #fff9c4; padding: 10px; border-radius: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        input[type="number"] { width: 45px; padding: 5px; border-radius: 5px; border: 1px solid #ccc; text-align: center; }
+
+        .top-btns { display: flex; justify-content: center; margin-bottom: 15px; height: 50px; }
+        .n-btn { 
+            width: 40px; height: 40px; cursor: pointer; background: #f1c40f; color: #fff; border: none; border-radius: 50%; 
+            font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 0 #d4ac0d; transition: 0.1s;
+        }
+        .n-btn.highlight { background: #2980b9 !important; box-shadow: 0 4px 0 #1a5276 !important; transform: scale(1.1); }
+        .n-btn:disabled { opacity: 0.4; }
+
+        canvas { background: #fff; border-radius: 10px; display: block; margin: 0 auto; border: 1px solid #ddd; }
+
+        .bottom-inputs { display: flex; justify-content: center; margin-top: 15px; }
+        .res-input { width: 60px; padding: 8px 0; text-align: center; border: 2px solid #ddd; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .res-input.active { background: #f1c40f; border-color: #e67e22; }
+
+        .controls { margin-top: 25px; display: flex; gap: 15px; justify-content: center; }
+        .btn-common { padding: 10px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem; color: #fff; }
+        .change-btn { background: #f1c40f; color: #333; padding: 5px 12px; font-size: 0.85rem; }
+        .shuffle-btn { background: #e67e22; }
+        .reset-btn { background: #2c3e50; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>제이방 사다리 게임</h1>
+
+    <div class="quick-nav">
+        <button class="nav-btn btn-s" onclick="location.href='indexS.html'">⭐ 구독 사다리</button>
+        <button class="nav-btn btn-c" onclick="location.href='indexC.html'">🍗 치킨 사다리</button>
+        <button class="nav-btn btn-p" onclick="location.href='indexP.html'">🍕 피자 사다리</button>
+    </div>
+
+    <div class="setup">
+        줄 개수: <input type="number" id="colInput" value="2" min="2" max="20">
+        <button class="btn-common change-btn" onclick="applyCols()">변경</button>
+    </div>
+
+    <div id="topBtns" class="top-btns"></div>
+    <canvas id="ladderCanvas"></canvas>
+    <div id="bottomInputs" class="bottom-inputs"></div>
+
+    <div class="controls">
+        <button class="btn-common shuffle-btn" onclick="shuffleResults()">섞기</button>
+        <button class="btn-common reset-btn" onclick="init()">리셋</button>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('ladderCanvas');
+    const ctx = canvas.getContext('2d');
+    let cols = 2, lines = [], isMoving = false, finishedPaths = [], gameStarted = false;
+    let reverseMap = {}; const pad = 50, colW = 80; let highlightPath = null;
+
+    function applyCols() { if(isMoving) return; cols = parseInt(document.getElementById('colInput').value) || 2; init(); }
+
+    function init() {
+        if(isMoving) return;
+        lines = []; finishedPaths = []; gameStarted = false; highlightPath = null;
+        canvas.width = (cols - 1) * colW + (pad * 2); canvas.height = 450;
+        const topArea = document.getElementById('topBtns'); const bottomArea = document.getElementById('bottomInputs');
+        topArea.innerHTML = ''; bottomArea.innerHTML = '';
+        for(let i=0; i<cols; i++) {
+            topArea.innerHTML += `<button class="n-btn" id="nb${i}" onclick="run(${i})">${i+1}</button>`;
+            const input = document.createElement('input');
+            input.type = 'text'; input.className = 'res-input'; input.placeholder = '꽝';
+            input.id = `res${i}`; input.onclick = () => showSource(i);
+            bottomArea.appendChild(input);
+        }
+        topArea.style.gap = (colW - 40) + 'px'; bottomArea.style.gap = (colW - 60) + 'px';
+
+        const STEP = 55; 
+        for(let y = 70; y < 400; y += STEP) {
+            for(let c = 0; c < cols - 1; c++) {
+                if(Math.random() > 0.4) {
+                    let type = Math.random() > 0.5 ? 1 : 0;
+                    lines.push({ c: c, y: y + (Math.random()*12 - 6), type: type, zig: type === 1 ? (Math.random() > 0.5 ? 15 : -15) : 0 });
+                }
+            }
+        }
+        lines.sort((a,b) => a.y - b.y);
+        calculateReverseMap();
+        draw();
+    }
+
+    function calculateReverseMap() {
+        reverseMap = {};
+        for(let s=0; s<cols; s++) {
+            let curC = s, curY = 0, p = [{x: pad + s*colW, y: 0}];
+            lines.forEach(l => {
+                if(l.y > curY && (l.c === curC || l.c === curC - 1)) {
+                    p.push({x: pad + curC*colW, y: l.y});
+                    if(l.type === 1) p.push({x: pad + (l.c === curC ? curC*colW + colW/2 : curC*colW - colW/2), y: l.y + l.zig});
+                    curC = (l.c === curC) ? curC + 1 : curC - 1;
+                    p.push({x: pad + curC*colW, y: l.y});
+                    curY = l.y;
+                }
+            });
+            p.push({x: pad + curC*colW, y: 450});
+            reverseMap[curC] = { startCol: s, fullPath: p };
+        }
+    }
+
+    function showSource(idx) {
+        if(!gameStarted || isMoving) return;
+        const info = reverseMap[idx]; if(!info) return;
+        highlightPath = info.fullPath;
+        document.querySelectorAll('.n-btn').forEach(b => b.classList.remove('highlight'));
+        document.getElementById('nb' + info.startCol).classList.add('highlight');
+        draw();
+    }
+
+    function shuffleResults() {
+        if(isMoving) return;
+        const inputs = Array.from(document.querySelectorAll('.res-input'));
+        let values = inputs.map(i => i.value);
+        for (let i = values.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [values[i], values[j]] = [values[j], values[i]];
+        }
+        inputs.forEach((input, i) => { input.value = values[i]; input.classList.remove('active'); });
+        highlightPath = null; draw();
+    }
+
+    function run(startCol) {
+        if(isMoving) return; isMoving = true; gameStarted = true; highlightPath = null;
+        document.getElementById('nb'+startCol).disabled = true;
+        let curC = startCol, curY = 0, path = [{x: pad + startCol * colW, y: 0}];
+        lines.forEach(l => {
+            if(l.y > curY && (l.c === curC || l.c === curC - 1)) {
+                path.push({x: pad + curC * colW, y: l.y});
+                if(l.type === 1) path.push({x: pad + (l.c === curC ? curC*colW + colW/2 : curC*colW - colW/2), y: l.y + l.zig});
+                curC = (l.c === curC) ? curC + 1 : curC - 1;
+                path.push({x: pad + curC * colW, y: l.y});
+                curY = l.y;
+            }
+        });
+        path.push({x: pad + curC * colW, y: 450});
+        animate(path, curC);
+    }
+
+    function animate(path, finalC) {
+        let step = 0, tx = path[0].x, ty = path[0].y, trail = [{x: tx, y: ty}];
+        function frame() {
+            if(step >= path.length - 1) {
+                finishedPaths.push(path);
+                const rb = document.getElementById(`res${finalC}`);
+                rb.classList.add('active'); if(!rb.value) rb.value = "꽝";
+                isMoving = false; return;
+            }
+            let next = path[step+1], dx = next.x - tx, dy = next.y - ty, d = Math.sqrt(dx*dx + dy*dy);
+            let speed = 25;
+            if(d < speed) { tx = next.x; ty = next.y; step++; }
+            else { tx += (dx/d) * speed; ty += (dy/d) * speed; }
+            trail.push({x: tx, y: ty}); draw();
+            ctx.beginPath(); ctx.strokeStyle = '#e67e22'; ctx.lineWidth = 8;
+            ctx.moveTo(trail[0].x, trail[0].y); trail.forEach(p => ctx.lineTo(p.x, p.y)); ctx.stroke();
+            ctx.font = "32px serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.fillText("😊", tx, ty);
+            requestAnimationFrame(frame);
+        }
+        frame();
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#bdc3c7'; ctx.lineWidth = 5; ctx.lineCap = "round";
+        for(let i=0; i<cols; i++) { ctx.beginPath(); ctx.moveTo(pad + i*colW, 0); ctx.lineTo(pad + i*colW, 450); ctx.stroke(); }
+        if(gameStarted) {
+            ctx.lineWidth = 1.5; ctx.strokeStyle = '#555';
+            lines.forEach(l => {
+                const x1 = pad + l.c*colW, x2 = x1 + colW;
+                ctx.beginPath(); ctx.moveTo(x1, l.y);
+                if(l.type === 1) ctx.lineTo(x1 + colW/2, l.y + l.zig);
+                ctx.lineTo(x2, l.y); ctx.stroke();
+            });
+        }
+        finishedPaths.forEach(p => {
+            ctx.beginPath(); ctx.strokeStyle = 'rgba(230, 126, 34, 0.2)'; ctx.lineWidth = 8;
+            ctx.moveTo(p[0].x, p[0].y); p.forEach(pt => ctx.lineTo(pt.x, pt.y)); ctx.stroke();
+        });
+        if(highlightPath) {
+            ctx.beginPath(); ctx.strokeStyle = '#2980b9'; ctx.lineWidth = 8;
+            ctx.moveTo(highlightPath[0].x, highlightPath[0].y); 
+            highlightPath.forEach(pt => ctx.lineTo(pt.x, pt.y)); ctx.stroke();
+        }
+    }
+    init();
+</script>
+</body>
+</html>

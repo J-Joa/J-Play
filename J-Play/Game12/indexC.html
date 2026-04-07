@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>제이방 치킨 사다리</title>
+    <style>
+        body { font-family: sans-serif; background: #fff9eb; display: flex; flex-direction: column; align-items: center; padding: 10px; }
+        /* 가로 너비는 860px로 시원하게 유지 */
+        .container { background: #fff; padding: 20px; border-radius: 20px; box-shadow: 0 8px 25px rgba(255, 165, 0, 0.15); width: 860px; text-align: center; border: 3px solid #ffd700; }
+        h1 { color: #d35400; margin-bottom: 15px; font-size: 1.6rem; }
+        
+        .top-btns { display: flex; justify-content: space-between; padding: 0 60px; margin-bottom: 10px; }
+        .n-btn { 
+            width: 55px; height: 55px; cursor: pointer; background: #f1c40f; color: #fff; border: none; border-radius: 50%; 
+            font-weight: bold; font-size: 1.3rem; transition: 0.2s; box-shadow: 0 4px 0 #d4ac0d;
+        }
+        .n-btn:active { transform: translateY(4px); box-shadow: none; }
+        .n-btn.hint-focus { background: #e67e22; transform: scale(1.1); box-shadow: 0 0 15px rgba(230, 126, 34, 0.6); }
+        .n-btn:disabled { opacity: 0.5; }
+
+        /* 세로 높이를 350px로 슬림하게 조정 */
+        canvas { background: #fff; border-radius: 10px; }
+
+        .bottom-list { display: flex; justify-content: space-between; padding: 0 30px; margin-top: 15px; }
+        .res-box { 
+            width: 130px; padding: 10px 0; text-align: center; border: 2px solid #ffd700; border-radius: 10px; 
+            font-weight: bold; font-size: 1rem; background: #fff; outline: none;
+        }
+        .res-box.active { background: #e67e22; color: #fff; border-color: #d35400; transform: scale(1.05); }
+
+        .controls { margin-top: 25px; display: flex; gap: 10px; justify-content: center; }
+        .btn-common { padding: 12px 35px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem; }
+        .reset-btn { background: #d35400; color: white; }
+        .shuffle-btn { background: #7f8c8d; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🍗 제이방 치킨 사다리</h1>
+    <div class="top-btns">
+        <button class="n-btn" id="nb0" onclick="run(0)">1</button>
+        <button class="n-btn" id="nb1" onclick="run(1)">2</button>
+        <button class="n-btn" id="nb2" onclick="run(2)">3</button>
+        <button class="n-btn" id="nb3" onclick="run(3)">4</button>
+        <button class="n-btn" id="nb4" onclick="run(4)">5</button>
+    </div>
+
+    <canvas id="ladder" width="800" height="350"></canvas>
+
+    <div class="bottom-list">
+        <input type="text" class="res-box" value="치킨">
+        <input type="text" class="res-box" value="다시">
+        <input type="text" class="res-box" value="벌렉">
+        <input type="text" class="res-box" value="꽝">
+        <input type="text" class="res-box" value="꽝">
+    </div>
+
+    <div class="controls">
+        <button class="btn-common shuffle-btn" onclick="shuffleResults()">섞기</button>
+        <button class="btn-common reset-btn" onclick="init()">리셋</button>
+    </div>
+</div>
+
+<script>
+    const cvs = document.getElementById('ladder');
+    const ctx = cvs.getContext('2d');
+    const boxes = document.querySelectorAll('.res-box');
+    const btns = document.querySelectorAll('.n-btn');
+    const pad = 65, colW = 167.5;
+    
+    let lines = [], isMoving = false, finishedPaths = [], answerMap = {}, gameStarted = false;
+
+    function init() {
+        lines = []; finishedPaths = []; isMoving = false; answerMap = {}; gameStarted = false;
+        boxes.forEach(b => b.classList.remove('active'));
+        btns.forEach(b => { b.disabled = false; b.classList.remove('hint-focus'); });
+
+        // 리셋 시 결과값 무작위 셔플 (요청사항 반영)
+        let currentVals = Array.from(boxes).map(b => b.value);
+        currentVals.sort(() => Math.random() - 0.5);
+        boxes.forEach((b, i) => b.value = currentVals[i]);
+
+        // 가로선 1~5개 랜덤 생성 (요청사항 반영)
+        for(let i=0; i<4; i++) {
+            let count = Math.floor(Math.random() * 5) + 1;
+            let stepY = 290 / count; 
+            for(let j=0; j<count; j++) {
+                let y = (j * stepY) + Math.random() * (stepY - 30) + 30;
+                lines.push({c: i, y: y, type: Math.random() > 0.5 ? 1 : 0, zig: Math.random() > 0.5 ? 15 : -15});
+            }
+        }
+        lines.sort((a,b) => a.y - b.y);
+        updateAnswerMap();
+        draw();
+    }
+
+    function shuffleResults() {
+        let vals = Array.from(boxes).map(b => b.value);
+        vals.sort(() => Math.random() - 0.5);
+        boxes.forEach((b, i) => { b.value = vals[i]; b.classList.remove('active'); });
+        updateAnswerMap();
+    }
+
+    function updateAnswerMap() {
+        answerMap = {};
+        for(let s=0; s<5; s++) {
+            let curC = s, curY = 0;
+            lines.forEach(l => {
+                if(l.y > curY && (l.c === curC || l.c === curC - 1)) {
+                    curC = (l.c === curC) ? curC + 1 : curC - 1;
+                    curY = l.y;
+                }
+            });
+            answerMap[curC] = s;
+        }
+    }
+
+    boxes.forEach((box, idx) => {
+        box.addEventListener('click', () => {
+            if(isMoving || !gameStarted) return;
+            btns.forEach(b => b.classList.remove('hint-focus'));
+            document.getElementById('nb' + answerMap[idx]).classList.add('hint-focus');
+        });
+    });
+
+    function run(startCol) {
+        if(isMoving) return;
+        isMoving = true; gameStarted = true;
+        btns.forEach(b => b.classList.remove('hint-focus'));
+        document.getElementById('nb'+startCol).disabled = true;
+
+        let curX = pad + startCol * colW, curY = 0, curC = startCol;
+        let path = [{x: curX, y: 0}];
+        lines.forEach(l => {
+            if(l.y > curY && (l.c === curC || l.c === curC - 1)) {
+                path.push({x: curX, y: l.y});
+                if(l.type === 1) {
+                    let midX = (l.c === curC) ? curX + colW/2 : curX - colW/2;
+                    path.push({x: midX, y: l.y + l.zig});
+                }
+                curC = (l.c === curC) ? curC + 1 : curC - 1;
+                curX = pad + curC * colW;
+                curY = l.y;
+                path.push({x: curX, y: curY});
+            }
+        });
+        path.push({x: curX, y: 350});
+        animate(path, curC);
+    }
+
+    function animate(path, finalC) {
+        let step = 0, tx = path[0].x, ty = path[0].y, trail = [{x: tx, y: ty}];
+        function frame() {
+            if(step >= path.length - 1) {
+                finishedPaths.push(path);
+                boxes[finalC].classList.add('active');
+                isMoving = false; return;
+            }
+            let next = path[step+1], dx = next.x - tx, dy = next.y - ty, d = Math.sqrt(dx*dx+dy*dy);
+            let speed = 14; 
+            if(d < speed) { tx = next.x; ty = next.y; step++; }
+            else { tx += dx/d*speed; ty += dy/d*speed; }
+            trail.push({x: tx, y: ty});
+            draw();
+            ctx.beginPath(); ctx.strokeStyle = '#e67e22'; ctx.lineWidth = 7;
+            ctx.moveTo(trail[0].x, trail[0].y); trail.forEach(p => ctx.lineTo(p.x, p.y)); ctx.stroke();
+            
+            ctx.font = "32px serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.fillText("🍗", tx, ty);
+            requestAnimationFrame(frame);
+        }
+        frame();
+    }
+
+    function draw() {
+        ctx.clearRect(0,0,800,350);
+        ctx.strokeStyle = '#7f8c8d'; ctx.lineWidth = 4; ctx.lineCap = "round";
+        for(let i=0; i<5; i++) {
+            ctx.beginPath(); ctx.moveTo(pad+i*colW, 0); ctx.lineTo(pad+i*colW, 350); ctx.stroke();
+        }
+        if(gameStarted || finishedPaths.length > 0) {
+            lines.forEach(l => {
+                const x1 = pad + l.c * colW, x2 = x1 + colW;
+                ctx.beginPath(); ctx.moveTo(x1, l.y);
+                if(l.type === 1) ctx.lineTo(x1 + colW/2, l.y + l.zig);
+                ctx.lineTo(x2, l.y); ctx.stroke();
+            });
+        }
+        finishedPaths.forEach(p => {
+            ctx.beginPath(); ctx.strokeStyle = 'rgba(230, 126, 34, 0.15)'; ctx.lineWidth = 7;
+            ctx.moveTo(p[0].x, p[0].y); p.forEach(pt => ctx.lineTo(pt.x, pt.y)); ctx.stroke();
+        });
+    }
+    init();
+</script>
+</body>
+</html>
