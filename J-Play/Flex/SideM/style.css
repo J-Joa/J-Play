@@ -46,7 +46,7 @@ body::-webkit-scrollbar {
 
 /* 숫자(노란색) 3D 효과 */
 .base-text span.num { 
-    color: #FFD700; 
+    color: #FFA500; 
     text-shadow: 0 2px 0 #B8860B, 0 4px 0 #8B6508, 0 6px 0 #4D3900, 0 10px 16px rgba(0,0,0,0.5); 
 }
 .base-text, .sub-item, .num, .txt {
@@ -61,7 +61,7 @@ body::-webkit-scrollbar {
 
 /* 글자(베이지색) 3D 효과 */
 .base-text span.txt { 
-    color: #F5DEB3; margin-left: 10px; 
+    color: #F8F8D9; margin-left: 10px; 
     text-shadow: 0 2px 0 #D2B48C, 0 4px 0 #BC8F8F, 0 6px 0 #8B4513, 0 10px 16px rgba(0,0,0,0.5); 
 }
 .base-text, .sub-item, .num, .txt {
