@@ -46,7 +46,7 @@ body::-webkit-scrollbar {
 
 /* 숫자(노란색) 3D 효과 */
 .base-text span.num { 
-    color: #FFCC00; 
+    color: #FFD700; 
     text-shadow: 0 2px 0 #B8860B, 0 4px 0 #8B6508, 0 6px 0 #4D3900, 0 10px 16px rgba(0,0,0,0.5); 
 }
 .base-text, .sub-item, .num, .txt {
