@@ -1,9 +1,9 @@
 /* 1. 최상단에 이 한 줄을 넣어서 폰트를 불러옵니다 */
-@import url('https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap');
+@import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/CookieRun-Bold.css');
 
 /* 2. 전체 폰트 강제 적용 ( !important 로 Arial Black을 밀어냅니다 ) */
 * {
-    font-family: 'Do Hyeon', sans-serif !important;
+    font-family: 'CookieRun-Bold', sans-serif !important;
 }
 body { 
     background: transparent; 
