@@ -38,28 +38,45 @@
 
         <div class="divider"></div>
 
-        <div class="base-text on-effect" style="cursor:pointer;" onclick="toggleSection('time1')">
+        <div class="base-text on-effect" id="t1" style="cursor:pointer;" onclick="toggleSection('time1')">
             <span class="num">77/78</span><span class="txt">시간룰렛</span>
         </div>
-        <div id="time1" style="display:none; margin-left:25px;">
+
+        <div id="time1" style="display:none; cursor:pointer;" onclick="closeSection('time1', 't1')">
             <div class="base-text"><span class="num">77</span><span class="txt">시간연장룰렛</span></div>
             <div class="base-text"><span class="num">78</span><span class="txt">시간감소룰렛</span></div>
         </div>
 
-        <div class="base-text on-effect" style="cursor:pointer;" onclick="toggleSection('time2')">
+        <div class="base-text on-effect" id="t2" style="cursor:pointer;" onclick="toggleSection('time2')">
             <span class="num">770/780</span><span class="txt">큰시간룰렛</span>
         </div>
-        <div id="time2" style="display:none; margin-left:25px;">
-            <div class="base-text"><span class="num">770</span><span class="txt">큰시간연장룰렛</span></div>
-            <div class="base-text"><span class="num">780</span><span class="txt">큰시간감소룰렛</span></div>
+        <div id="time2" style="display:none; cursor:pointer;" onclick="closeSection('time2', 't2')">
+            <div class="base-text"><span class="num">770</span><span class="txt">슈퍼연장룰렛</span></div>
+            <div class="base-text"><span class="num">780</span><span class="txt">슈퍼감소룰렛</span></div>
         </div>
     </div>
 
-    <script>
-        function toggleSection(id) {
-            const el = document.getElementById(id);
-            el.style.display = (el.style.display === "none") ? "block" : "none";
-        }
+<script>
+function toggleSection(id) {
+    const el = document.getElementById(id); // 세부 목록 (77, 78 등)
+    const title = event.currentTarget;      // 클릭한 제목 (77/78 등)
+
+    if (el.style.display === "none" || el.style.display === "") {
+        // [펼치기] 목록 보여주고 제목 숨기기
+        el.style.display = "block";
+        title.style.display = "none";
+    }
+}
+
+// 목록을 클릭했을 때 다시 제목을 보여주는 함수
+function closeSection(menuId, titleId) {
+    const menu = document.getElementById(menuId);
+    const title = document.getElementById(titleId);
+    
+    // [접기] 목록 숨기고 제목 다시 보여주기
+    menu.style.display = "none";
+    title.style.display = "block";
+}
     </script>
 </body>
 </html>
