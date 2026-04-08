@@ -1,10 +1,23 @@
-/* 1. 최상단에 이 한 줄을 넣어서 폰트를 불러옵니다 */
-@import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/CookieRun-Bold.css');
-
-/* 2. 전체 폰트 강제 적용 ( !important 로 Arial Black을 밀어냅니다 ) */
-* {
-    font-family: 'CookieRun-Bold', sans-serif !important;
+/* 외부 주소 다 지우고 이걸로 갈아 끼우세요 */
+@font-face {
+    font-family: 'MyCookieRun';
+    /* 깃허브에 같이 올린 폰트 파일명을 정확히 적으세요 (확장자 주의) */
+    src: url('CookieRun Bold.ttf') format('truetype'); 
+    font-weight: normal;
+    font-style: normal;
 }
+
+* {
+    font-family: 'MyCookieRun', sans-serif !important;
+}
+
+/* 3. 메뉴 가독성 (들러붙지 않게) */
+.sub-item {
+    padding: 12px 0 !important;
+    line-height: 1.6 !important;
+    display: block !important;
+}
+
 body { 
     background: transparent; 
     margin: 0; 
