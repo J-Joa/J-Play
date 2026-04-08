@@ -43,14 +43,34 @@ body::-webkit-scrollbar {
     cursor: pointer;
 }
 
-/* 뽑기 메뉴 레이어 */
-.hover-parent { position: relative; z-index: 1000; }
-.hover-menu {
-    display: none; position: absolute; left: 105%; top: -10px;
-    background: rgba(0, 0, 0, 0.95); padding: 15px; 
-    border: 2px solid #F5DEB3; border-radius: 8px; z-index: 9999;
+/* 1. 메뉴가 나타나는 위치와 간격 조정 */
+.hover-parent {
+    position: relative;
+    display: inline-block; /* 글자 크기만큼만 영역 잡기 */
+    padding-right: 50px;   /* 글자 오른쪽에 보이지 않는 가교(다리)를 만듭니다 */
+    margin-right: -50px;  /* 가교 때문에 밀려나는걸 방지 */
 }
-.hover-parent:hover .hover-menu { display: block; }
+
+.hover-menu {
+    display: none;
+    position: absolute;
+    left: 100%;           /* 글자 바로 옆에서 시작 */
+    top: -10px;
+    background: rgba(0, 0, 0, 0.95);
+    padding: 15px;
+    border: 2px solid #F5DEB3;
+    border-radius: 8px;
+    z-index: 9999;
+    
+    /* 2. 메뉴 자체에 보이지 않는 투명 테두리를 줘서 마우스가 길을 잃지 않게 함 */
+    margin-left: -10px;   /* 글자와 메뉴 사이의 물리적 틈을 제거 */
+    padding-left: 20px;   /* 대신 안쪽 여백을 줘서 디자인 유지 */
+}
+
+/* 3. 호버 판정 유지 */
+.hover-parent:hover .hover-menu {
+    display: block;
+}
 
 .sub-item { color: #F5DEB3; font-size: 1.8vw; margin-bottom: 8px; white-space: nowrap; }
 .divider { border-bottom: 2px dashed rgba(255,255,255,0.2); margin: 12px 0; width: 150px; }
