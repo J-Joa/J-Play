@@ -39,7 +39,7 @@ body {
 body::-webkit-scrollbar {
     display: none;
 }
-.container { display: flex; flex-direction: column; gap: 10px; }
+.container { display: flex; flex-direction: column; gap: 2px; }
 
 /* 2D 찌꺼기 없이 깔끔하게 3D 효과만 적용 */
 .base-text {
