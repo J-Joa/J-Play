@@ -1,3 +1,10 @@
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    /* 텍스트에 얇은 외곽선을 주면 훨씬 또렷해집니다 */
+    -webkit-text-stroke: 0.5px rgba(0,0,0,0.1);
+}
 /* 외부 주소 다 지우고 이걸로 갈아 끼우세요 */
 @font-face {
     font-family: 'MyCookieRun';
@@ -14,7 +21,7 @@
 /* 3. 메뉴 가독성 (들러붙지 않게) */
 .sub-item {
     padding: 12px 0 !important;
-    line-height: 1.6 !important;
+    line-height: 1.0 !important;
     display: block !important;
 }
 
@@ -37,7 +44,7 @@ body::-webkit-scrollbar {
 /* 2D 찌꺼기 없이 깔끔하게 3D 효과만 적용 */
 .base-text {
     font-size: 3.2vw; font-weight: bold; text-decoration: none;
-    display: block; width: fit-content; margin-bottom: 5px;
+    display: block; width: fit-content; margin-bottom: 2px;
     transition: 0.2s ease;
     /* 배경이나 중복 요소를 제거하여 겹침 방지 */
     background: none;
@@ -110,5 +117,5 @@ body::-webkit-scrollbar {
     display: block;
 }
 
-.sub-item { color: #F5DEB3; font-size: 1.8vw; margin-bottom: 8px; white-space: nowrap; }
+.sub-item { color: #F5DEB3; font-size: 1.8vw; margin-bottom: 3px; white-space: nowrap; }
 .divider { border-bottom: 2px dashed rgba(255,255,255,0.2); margin: 12px 0; width: 150px; }
