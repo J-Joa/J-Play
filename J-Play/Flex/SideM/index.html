@@ -6,7 +6,6 @@
 </head>
 <body>
     <div class="container">
-
         <div class="base-text"><span class="num">72</span><span class="txt">시그댄스 룰렛</span></div>
         <div class="base-text"><span class="num">73</span><span class="txt">스키</span></div>
         <div class="base-text"><span class="num">92</span><span class="txt">역도</span></div>
@@ -19,7 +18,7 @@
         
         <div class="base-text on-effect hover-parent">
             <span class="num">172</span><span class="txt">뽑기판</span>
-            <div class="hover-menu">
+            <div class="hover-menu" id="ppokki-menu">
                 <div class="sub-item">1등: 식데 or 배민10</div>
                 <div class="sub-item">2등: 치데 or 배민5</div>
                 <div class="sub-item">3등: 배민2</div>
@@ -39,7 +38,6 @@
         <div class="base-text on-effect" id="t1" style="cursor:pointer;" onclick="toggleSection('time1')">
             <span class="num">77/78</span><span class="txt">시간룰렛</span>
         </div>
-
         <div id="time1" style="display:none; cursor:pointer;" onclick="closeSection('time1', 't1')">
             <div class="base-text"><span class="num">77</span><span class="txt">시간연장룰렛</span></div>
             <div class="base-text"><span class="num">78</span><span class="txt">시간감소룰렛</span></div>
@@ -55,26 +53,45 @@
     </div>
 
 <script>
+// 기존 토글 기능
 function toggleSection(id) {
-    const el = document.getElementById(id); // 세부 목록 (77, 78 등)
-    const title = event.currentTarget;      // 클릭한 제목 (77/78 등)
-
+    const el = document.getElementById(id);
+    const title = event.currentTarget;
     if (el.style.display === "none" || el.style.display === "") {
-        // [펼치기] 목록 보여주고 제목 숨기기
         el.style.display = "block";
         title.style.display = "none";
     }
 }
-
-// 목록을 클릭했을 때 다시 제목을 보여주는 함수
 function closeSection(menuId, titleId) {
     const menu = document.getElementById(menuId);
     const title = document.getElementById(titleId);
-    
-    // [접기] 목록 숨기고 제목 다시 보여주기
     menu.style.display = "none";
     title.style.display = "block";
 }
-    </script>
+
+// --- 사용자 요청 단축키 통합 관리 ---
+window.addEventListener('keydown', (e) => {
+    // 채팅 입력 중에는 단축키 무시 (안전장치)
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+
+    // 1. [ 키 : 뽑기판 목록 보여주기/숨기기
+    if (e.key === '[') {
+        e.preventDefault();
+        const menu = document.getElementById('ppokki-menu');
+        if (menu) {
+            const isVisible = window.getComputedStyle(menu).display === 'block';
+            menu.style.setProperty('display', isVisible ? 'none' : 'block', 'important');
+            menu.style.opacity = '1';
+        }
+    }
+
+    // 2. ] 키 : 리액션 목록(menu.html) 즉시 실행
+    if (e.key === ']') {
+        e.preventDefault();
+        // 4등 메뉴에 연결된 리액션 정렬 창을 바로 띄웁니다.
+        window.open('menu.html', 'M', 'width=600,height=800');
+    }
+}, true); // 캡처링 단계에서 감지하여 다른 요소의 간섭을 막음
+</script>
 </body>
 </html>
