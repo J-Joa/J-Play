@@ -6,15 +6,17 @@
 </head>
 <body>
     <div class="container">
-       <div class="base-text on-effect hover-parent">
+
+        <div class="base-text on-effect" id="t1" style="cursor:pointer;" onclick="toggleSection('time1')">
             <span class="num">♡</span><span class="txt">뽑기판</span><span class="num">♡</span>
         <div class="base-text"><span class="num">100</span><span class="txt">1장</span><span class="num">175</span><span class="txt">2장</span></div>
-            <div class="hover-menu" id="ppokki-menu">
-                <div class="sub-item">1등: 카톡(1), 식데(2), 역팬500</div>
-                <div class="sub-item">2등: 바아셀10장, 모닝콜, 역팬300, 원하는 시간 방송</div>
-                <div class="sub-item">3등: 3장쪽셀, 역팬100, 구독권, 원하는 의상, 냠냠권(2장당 1개)</div>
-                <div class="sub-item">4등: 역팬10, 퀵플7일</div>
-                <div class="sub-item">5등: 하튜♡</div>
+        </div>
+        <div id="time1" style="display:none; cursor:pointer;" onclick="closeSection('time1', 't1')">
+                <div class="sub-item"><span class="txt">1등: 카톡(1), 식데(2), 역팬500</span></div>
+                <div class="sub-item"><span class="txt">2등: 바아셀10장, 모닝콜, 역팬300, 원하는 시간 방송</span></div>
+                <div class="sub-item"><span class="txt">3등: 3장쪽셀, 역팬100, 구독권, 원하는 의상, 냠냠권(2장당 1개)</span></div>
+                <div class="sub-item"><span class="txt">4등: 역팬10, 퀵플7일</span></div>
+                <div class="sub-item"><span class="txt">5등: 하튜♡</span></div>
             </div>
         </div>
 
@@ -145,7 +147,7 @@ body::-webkit-scrollbar {
     display: block;
 }
 
-.sub-item { color: #F5DEB3; font-size: 1.8vw; margin-bottom: 3px; white-space: nowrap; }
+.sub-item { color: #FA8EE5; font-size: 1.8vw; margin-bottom: 3px; white-space: nowrap; }
 .divider { border-bottom: 2px dashed rgba(255,255,255,0.2); margin: 12px 0; width: 150px; }
 </style>
 
