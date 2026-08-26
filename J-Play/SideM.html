@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+       <div class="base-text on-effect hover-parent">
+            <span class="num">♡</span><span class="txt">뽑기판</span><span class="num">♡</span>
+        <div class="base-text"><span class="num">100</span><span class="txt">1장</span><span class="num">175</span><span class="txt">2장</span></div>
+            <div class="hover-menu" id="ppokki-menu">
+                <div class="sub-item">1등: 카톡(1), 식데(2), 역팬500</div>
+                <div class="sub-item">2등: 바아셀10장, 모닝콜, 역팬300, 원하는 시간 방송</div>
+                <div class="sub-item">3등: 3장쪽셀, 역팬100, 구독권, 원하는 의상, 냠냠권(2장당 1개)</div>
+                <div class="sub-item">4등: 역팬10, 퀵플7일</div>
+                <div class="sub-item">5등: 하튜♡</div>
+            </div>
+        </div>
+
+        <div class="base-text"><span class="num">♡</span><span class="txt">한방 방셀</span><span class="num">♡</span></div>
+        <div class="base-text"><span class="num">475</span><span class="txt">3장 쪽셀</span></div>
+        <div class="base-text"><span class="num">1475</span><span class="txt">일반 방셀(사진10장,움짤5장)</span></div>
+        <div class="base-text"><span class="num">2875</span><span class="txt">정성 방셀</span></div>
+        <div class="divider"></div>
+    </div>
+
+<style>
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    /* 텍스트에 얇은 외곽선을 주면 훨씬 또렷해집니다 */
+    -webkit-text-stroke: 0.5px rgba(0,0,0,0.1);
+}
+/* 외부 주소 다 지우고 이걸로 갈아 끼우세요 */
+@font-face {
+    font-family: 'MyCookieRun';
+    /* 깃허브에 같이 올린 폰트 파일명을 정확히 적으세요 (확장자 주의) */
+    src: url('CookieRun Bold.ttf') format('truetype'); 
+    font-weight: normal;
+    font-style: normal;
+}
+
+* {
+    font-family: 'MyCookieRun', sans-serif !important;
+}
+
+/* 3. 메뉴 가독성 (들러붙지 않게) */
+.sub-item {
+    padding: 2px 0 !important;
+    line-height: 1.0 !important;
+    display: block !important;
+}
+
+body { 
+    background: transparent; 
+    margin: 0; 
+    padding: 25px; 
+    font-family: 'Arial Black', sans-serif; 
+    /* 스크롤바가 아예 안 보이게 숨기기 (모든 브라우저 대응) */
+    -ms-overflow-style: none; /* IE, Edge */
+    scrollbar-width: none; /* Firefox */
+}
+
+/* 크롬, 사파리, OBS 브라우저 소스용 스크롤바 숨기기 */
+body::-webkit-scrollbar {
+    display: none;
+}
+.container { display: flex; flex-direction: column; gap: 2px; }
+
+/* 2D 찌꺼기 없이 깔끔하게 3D 효과만 적용 */
+.base-text {
+    font-size: 3.2vw; font-weight: bold; text-decoration: none;
+    display: block; width: fit-content; margin-bottom: 2px;
+    transition: 0.2s ease;
+    /* 배경이나 중복 요소를 제거하여 겹침 방지 */
+    background: none;
+    border: none;
+}
+
+/* 숫자(노란색) 3D 효과 */
+.base-text span.num { 
+    color: #FFA500; 
+    text-shadow: 0 2px 0 #B8860B, 0 4px 0 #8B6508, 0 6px 0 #4D3900, 0 10px 16px rgba(0,0,0,0.5); 
+}
+.base-text, .sub-item, .num, .txt {
+    /* 1. 기존 text-shadow는 절대 지우지 마세요! (그대로 둡니다) */
+
+    /* 2. 글자 획 주변에만 1px 검은 테두리를 칩니다 */
+    -webkit-text-stroke: 1px #000000; 
+    
+    /* 3. 테두리 때문에 글자가 얇아 보이지 않게 보정 */
+    paint-order: stroke fill; 
+}
+
+/* 글자(베이지색) 3D 효과 */
+.base-text span.txt { 
+    color: #F8F8D9; margin-left: 10px; 
+    text-shadow: 0 2px 0 #D2B48C, 0 4px 0 #BC8F8F, 0 6px 0 #8B4513, 0 10px 16px rgba(0,0,0,0.5); 
+}
+.base-text, .sub-item, .num, .txt {
+    /* 1. 기존 text-shadow는 절대 지우지 마세요! (그대로 둡니다) */
+
+    /* 2. 글자 획 주변에만 1px 검은 테두리를 칩니다 */
+    -webkit-text-stroke: 1px #000000; 
+    
+    /* 3. 테두리 때문에 글자가 얇아 보이지 않게 보정 */
+    paint-order: stroke fill; 
+}
+
+/* 상단 4개 + 시간룰렛 메인: 마우스 대면 밝아지는 효과 */
+.on-effect:hover {
+    filter: brightness(1.6);
+    transform: translateY(-3px);
+    cursor: pointer;
+}
+
+/* 1. 메뉴가 나타나는 위치와 간격 조정 */
+.hover-parent {
+    position: relative;
+    display: inline-block; /* 글자 크기만큼만 영역 잡기 */
+    padding-right: 50px;   /* 글자 오른쪽에 보이지 않는 가교(다리)를 만듭니다 */
+    margin-right: -50px;  /* 가교 때문에 밀려나는걸 방지 */
+}
+
+.hover-menu {
+    display: none;
+    position: absolute;
+    left: 100%;           /* 글자 바로 옆에서 시작 */
+    top: -10px;
+    background: rgba(0, 0, 0, 0.95);
+    padding: 5px;
+    border: 1px solid #F5DEB3;
+    border-radius: 8px;
+    z-index: 9999;
+    
+    /* 2. 메뉴 자체에 보이지 않는 투명 테두리를 줘서 마우스가 길을 잃지 않게 함 */
+    margin-left: -10px;   /* 글자와 메뉴 사이의 물리적 틈을 제거 */
+    padding-left: 20px;   /* 대신 안쪽 여백을 줘서 디자인 유지 */
+}
+
+/* 3. 호버 판정 유지 */
+.hover-parent:hover .hover-menu {
+    display: block;
+}
+
+.sub-item { color: #F5DEB3; font-size: 1.8vw; margin-bottom: 3px; white-space: nowrap; }
+.divider { border-bottom: 2px dashed rgba(255,255,255,0.2); margin: 12px 0; width: 150px; }
+</style>
+
+<script>
+// 기존 토글 기능
+function toggleSection(id) {
+    const el = document.getElementById(id);
+    const title = event.currentTarget;
+    if (el.style.display === "none" || el.style.display === "") {
+        el.style.display = "block";
+        title.style.display = "none";
+    }
+}
+function closeSection(menuId, titleId) {
+    const menu = document.getElementById(menuId);
+    const title = document.getElementById(titleId);
+    menu.style.display = "none";
+    title.style.display = "block";
+}
+
+// --- 사용자 요청 단축키 통합 관리 ---
+window.addEventListener('keydown', (e) => {
+    // 채팅 입력 중에는 단축키 무시 (안전장치)
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+
+    // 1. [ 키 : 뽑기판 목록 보여주기/숨기기
+    if (e.key === '[') {
+        e.preventDefault();
+        const menu = document.getElementById('ppokki-menu');
+        if (menu) {
+            const isVisible = window.getComputedStyle(menu).display === 'block';
+            menu.style.setProperty('display', isVisible ? 'none' : 'block', 'important');
+            menu.style.opacity = '1';
+        }
+    }
+
+    // 2. ] 키 : 리액션 목록(menu.html) 즉시 실행
+    if (e.key === ']') {
+        e.preventDefault();
+        // 4등 메뉴에 연결된 리액션 정렬 창을 바로 띄웁니다.
+        window.open('menu.html', 'M', 'width=600,height=800');
+    }
+}, true); // 캡처링 단계에서 감지하여 다른 요소의 간섭을 막음
+</script>
+</body>
+</html>
